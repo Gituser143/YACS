@@ -4,6 +4,7 @@
 import sys
 import datetime 
 
+val = input()
 
 f = open("../plane_carriers.ndjson","r")
 lines = f.readlines()
@@ -48,16 +49,15 @@ for line in lines:
     line = line.strip().strip("{").strip("}").split(", ")
 
     while i < 4:
-
         x = (line[i].split(":")[1]).strip(" ").strip('"')
-        if(check(i,x) ==0) : 
+        i +=1
+        if(check(i-1,x) ==0) : 
             continue
         finallist.append(str(x))
-        i +=1
 
     if(len(finallist) == 4):
 
-        if finallist[0] == "aircraft carrier":
+        if finallist[0] == val:
 
             if (finallist[3] == 'true'):
                 print(1," ",1)

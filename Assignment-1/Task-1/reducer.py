@@ -3,17 +3,20 @@
 
 import sys
 
-count1 = 0
-count2 = 0
-
+dict = {}
 for line in sys.stdin:
+    # print(line)
     line = line.strip()
+    try:
+        word, count = line.split()
+        if word not in dict:
+            dict[word] = 1
+        elif word in dict: 
+            dict[word] += 1
+    except:
+        print("Error")
+        exit(1)
 
-    word, count = line.split()
-    if(word == "1"):
-        count1+=1
-    elif(word == "2"):
-        count2+=1
-
-print(count1)
-print(count2)
+for i in dict:
+    print(dict[i])
+    
