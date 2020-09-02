@@ -18,9 +18,9 @@ for line in sys.stdin:
         current_count += count
     else:
         if current_word:
-            print(current_word, current_count)
+            print(current_word, current_count, sep=",")
         current_count = count
         current_word = word
 
 if current_word == word:
-    print(current_word, current_count)
+    print(current_word, current_count, sep=",")
