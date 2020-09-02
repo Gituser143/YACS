@@ -46,7 +46,7 @@ if len(sys.argv) != 3:
     distance = 0
 else:
     word = sys.argv[1]
-    distance = sys.argv[2]
+    distance = float(sys.argv[2])
 
 
 for line in sys.stdin:
@@ -60,13 +60,11 @@ for line in sys.stdin:
             checks += isclean(i, line)
 
             if checks == 5:
-
                 if(line["word"] == word):
                     x0 = line["drawing"][0][0][0]
                     y0 = line["drawing"][0][1][0]
 
                     euclidean_distance = x0*x0 + y0*y0
-
                     if(euclidean_distance > distance*distance):
                         print (line["countrycode"], 1)
     except:
