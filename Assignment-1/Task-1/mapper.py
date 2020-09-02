@@ -4,10 +4,18 @@
 import sys
 import datetime
 
-val = input()
+var = 1
+l = len(sys.argv) - 1
 
-f = open("../plane_carriers.ndjson", "r")
-lines = f.readlines()
+val = ''
+if l > 1:
+    while var <= l:
+        val = val+' '+str(sys.argv[o])
+        var += 1
+else:
+    val = sys.argv[1]
+
+val = val.strip()
 
 
 def is_weekend(date):
@@ -45,7 +53,7 @@ def check(type, x):
     return 1
 
 
-for line in lines:
+for line in sys.stdin:
 
     i = 0
     finallist = []
@@ -70,5 +78,6 @@ for line in lines:
                 print(2, " ", 1)
                 pass
 
-# Execution = echo "airplane" | ./mapper.py | ./reducer.py
-# Execution = echo "aircraft carrier" | ./mapper.py | ./reducer.py
+
+# Command for execution
+# hadoop jar /home/hadoop/hadoop/share/hadoop/tools/lib/hadoop-streaming-3.2.1.jar -mapper "/vagrant/UE18CS322-BD/Assignment-1/Task-1/mapper.py aircraft carrier" -reducer "/vagrant/UE18CS322-BD/Assignment-1/Task-1/reducer.py" -input /user/BD_Assignment1/plane_carriers.ndjson -output /user/BD_Assignment1/output
