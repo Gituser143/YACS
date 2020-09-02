@@ -1,3 +1,6 @@
+#!/usr/bin/python3
+""" mapper.py """
+
 import sys
 import datetime 
 
@@ -38,9 +41,8 @@ def check(type,x) :
 
     return 1
 
-
-skip = 0
 for line in lines:
+
     i = 0
     finallist = []
     line = line.strip().strip("{").strip("}").split(", ")
@@ -54,11 +56,13 @@ for line in lines:
         i +=1
 
     if(len(finallist) == 4):
+
         if finallist[0] == "aircraft carrier":
+
             if (finallist[3] == 'true'):
-                print(finallist[0],1)
+                print(1," ",1)
                 pass
             
             elif (finallist[3] == 'false') & is_weekend(finallist[2].split()[0]):
-                print(finallist[0],2)
+                print(2," ",1)
                 pass
