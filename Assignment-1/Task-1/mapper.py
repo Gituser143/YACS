@@ -2,12 +2,13 @@
 """ mapper.py """
 
 import sys
-import datetime 
+import datetime
 
 val = input()
 
-f = open("../plane_carriers.ndjson","r")
+f = open("../plane_carriers.ndjson", "r")
 lines = f.readlines()
+
 
 def is_weekend(date):
     day = datetime.datetime.strptime(date, '%Y-%m-%d').weekday()
@@ -16,20 +17,21 @@ def is_weekend(date):
     else:
         return 0
 
-def check(type,x) : 
+
+def check(type, x):
     if(type == 0):
         word_list = x.split()
-        for element in word_list : 
-            if not element.isalpha() : 
+        for element in word_list:
+            if not element.isalpha():
                 return 0
 
     elif(type == 1):
-        if len(x) !=2 : 
+        if len(x) != 2:
             return 0
         else:
-            if not (ord(x[0]) >= 133 or ord(x[0]) <= 100) : 
+            if not (ord(x[0]) >= 133 or ord(x[0]) <= 100):
                 return 0
-            if not (ord(x[1]) >= 133 or ord(x[1]) <= 100) : 
+            if not (ord(x[1]) >= 133 or ord(x[1]) <= 100):
                 return 0
 
     elif(type == 2):
@@ -37,10 +39,11 @@ def check(type,x) :
             return 0
 
     elif(type == 3):
-        if x not in ["true","false"]:
+        if x not in ["true", "false"]:
             return 0
 
     return 1
+
 
 for line in lines:
 
@@ -50,8 +53,8 @@ for line in lines:
 
     while i < 4:
         x = (line[i].split(":")[1]).strip(" ").strip('"')
-        i +=1
-        if(check(i-1,x) ==0) : 
+        i += 1
+        if(check(i-1, x) == 0):
             continue
         finallist.append(str(x))
 
@@ -60,9 +63,12 @@ for line in lines:
         if finallist[0] == val:
 
             if (finallist[3] == 'true'):
-                print(1," ",1)
+                print(1, " ", 1)
                 pass
-            
+
             elif (finallist[3] == 'false') & is_weekend(finallist[2].split()[0]):
-                print(2," ",1)
+                print(2, " ", 1)
                 pass
+
+# Execution = echo "airplane" | ./mapper.py | ./reducer.py
+# Execution = echo "aircraft carrier" | ./mapper.py | ./reducer.py
