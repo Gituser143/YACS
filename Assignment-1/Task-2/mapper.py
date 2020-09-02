@@ -13,7 +13,7 @@ def isclean(type, x):
             else:
                 return 0
         return 1
-    
+
     if type == 1:
         # Country code contains only 2 letters, both in uppercase
         if (len(x["countrycode"]) == 2 and x["countrycode"].isupper()):
@@ -37,8 +37,8 @@ def isclean(type, x):
         if len(x["drawing"]) >= 1:
             return 1
         return 0
-        
-    
+
+
 # Checks for command line args
 if len(sys.argv) != 3:
     # Set default if not given
@@ -59,14 +59,12 @@ for line in sys.stdin:
         checks += isclean(i, line)
 
     if checks == 5:
-        
-            if(line["word"] == word):
-                x0 = line["drawing"][0][0][0]
-                y0 = line["drawing"][0][1][0]
-            
-                euclidean_distance = x0*x0 + y0*y0;
-                
-                if(euclidean_distance > distance*distance):
-                    print (line["countrycode"], 1)
-            
- 
+
+        if(line["word"] == word):
+            x0 = line["drawing"][0][0][0]
+            y0 = line["drawing"][0][1][0]
+
+            euclidean_distance = x0*x0 + y0*y0
+
+            if(euclidean_distance > distance*distance):
+                print (line["countrycode"], 1)
