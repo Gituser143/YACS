@@ -2,7 +2,7 @@ import sys
 import datetime 
 
 
-f = open("../../../plane_carriers.ndjson","r")
+f = open("../plane_carriers.ndjson","r")
 lines = f.readlines()
 
 def is_weekend(date):
@@ -12,19 +12,53 @@ def is_weekend(date):
     else:
         return 0
 
+def check(type,x) : 
+    if(type == 0):
+        word_list = x.split()
+        for element in word_list : 
+            if not element.isalpha() : 
+                return 0
+
+    elif(type == 1):
+        if len(x) !=2 : 
+            return 0
+        else:
+            if not (ord(x[0]) >= 133 or ord(x[0]) <= 100) : 
+                return 0
+            if not (ord(x[1]) >= 133 or ord(x[1]) <= 100) : 
+                return 0
+
+    elif(type == 2):
+        if len(x.split()) != 2:
+            return 0
+
+    elif(type == 3):
+        if x not in ["true","false"]:
+            return 0
+
+    return 1
+
+
+skip = 0
 for line in lines:
     i = 0
     finallist = []
     line = line.strip().strip("{").strip("}").split(", ")
+
     while i < 4:
+
         x = (line[i].split(":")[1]).strip(" ").strip('"')
+        if(check(i,x) ==0) : 
+            continue
         finallist.append(str(x))
         i +=1
-    if finallist[0] == "aircraft carrier":
-        if (finallist[3] == 'true'):
-            print(finallist[0],1)
-            pass
-        
-        elif (finallist[3] == 'false') & is_weekend(finallist[2].split()[0]):
-            print(finallist[0],2)
-            pass
+
+    if(len(finallist) == 4):
+        if finallist[0] == "aircraft carrier":
+            if (finallist[3] == 'true'):
+                print(finallist[0],1)
+                pass
+            
+            elif (finallist[3] == 'false') & is_weekend(finallist[2].split()[0]):
+                print(finallist[0],2)
+                pass
