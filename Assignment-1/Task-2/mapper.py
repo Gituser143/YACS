@@ -51,20 +51,23 @@ else:
 
 for line in sys.stdin:
 
-    line = json.loads(line)
+    try:
+        line = json.loads(line)
 
-    checks = 0
+        checks = 0
 
-    for i in range(5):
-        checks += isclean(i, line)
+        for i in range(5):
+            checks += isclean(i, line)
 
-    if checks == 5:
+            if checks == 5:
 
-        if(line["word"] == word):
-            x0 = line["drawing"][0][0][0]
-            y0 = line["drawing"][0][1][0]
+                if(line["word"] == word):
+                    x0 = line["drawing"][0][0][0]
+                    y0 = line["drawing"][0][1][0]
 
-            euclidean_distance = x0*x0 + y0*y0
+                    euclidean_distance = x0*x0 + y0*y0
 
-            if(euclidean_distance > distance*distance):
-                print (line["countrycode"], 1)
+                    if(euclidean_distance > distance*distance):
+                        print (line["countrycode"], 1)
+    except:
+        continue
