@@ -5,6 +5,7 @@ import sys
 import datetime
 import json
 
+# Read command line args
 word = sys.argv[1]
 
 

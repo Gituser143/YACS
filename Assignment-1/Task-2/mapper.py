@@ -40,14 +40,9 @@ def isclean(type, x):
         return 0
 
 
-# Checks for command line args
-if len(sys.argv) != 3:
-    # Set default if not given
-    word = "airplane"
-    distance = 0
-else:
-    word = sys.argv[1]
-    distance = float(sys.argv[2])
+# Read command line args
+word = sys.argv[1]
+distance = float(sys.argv[2])
 
 
 for line in sys.stdin:
