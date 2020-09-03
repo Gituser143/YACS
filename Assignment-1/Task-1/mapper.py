@@ -5,10 +5,7 @@ import sys
 import datetime
 import json
 
-if len(sys.argv) != 2:
-    word = "airplane"
-else:
-    word = sys.argv[1]
+word = sys.argv[1]
 
 
 def is_weekend(date):
