@@ -1,26 +1,29 @@
-#! /usr/bin/python3
+#!/usr/bin/python3
+"""reducer.py"""
+
 import sys
 
-current_word = None
-current_count = 0
-word = None
-
+dict = {}
 for line in sys.stdin:
-    line = line.strip()
-    word, count = line.split()
 
+    line = line.strip()
     try:
-        count = int(count)
-    except ValueError:
+        word, count = line.split()
+        if word not in dict:
+            dict[word] = 1
+        elif word in dict:
+            dict[word] += 1
+
+    except:
         continue
 
-    if current_word == word:
-        current_count += count
-    else:
-        if current_word:
-            print(current_word, current_count, sep=",")
-        current_count = count
-        current_word = word
+finalList = []
 
-if current_word == word:
-    print(current_word, current_count, sep=",")
+for key in dict:
+    str1 = (str(key)+","+str(dict[key]))
+    finalList.append(str1)
+
+finalList.sort()
+
+for val in finalList:
+    print(val)
