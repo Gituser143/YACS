@@ -17,13 +17,5 @@ for line in sys.stdin:
     except:
         continue
 
-finalList = []
-
-for key in dict:
-    str1 = (str(key)+","+str(dict[key]))
-    finalList.append(str1)
-
-finalList.sort()
-
-for val in finalList:
-    print(val)
+for key in sorted(dict.keys()):
+    print(key, dict[key], sep=",")
