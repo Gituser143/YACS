@@ -67,6 +67,6 @@ for line in sys.stdin:
 
                     euclidean_distance = x0*x0 + y0*y0
                     if(euclidean_distance > distance*distance):
-                        print (line["countrycode"], 1)
+                        print(line["countrycode"], 1)
     except:
         continue
