@@ -46,7 +46,12 @@ def isclean(type, x):
         if len(x["key_id"]) == 16:
             return 1
         return 0
-
+    
+     if type == 4:
+        # drawing contains atleast one stroke
+        if len(x["drawing"]) >= 1:
+            return 1
+        return 0
 
 for line in sys.stdin:
 
@@ -57,7 +62,7 @@ for line in sys.stdin:
         for i in range(4):
             checks += isclean(i, line)
 
-            if checks == 4:
+            if checks == 5:
                 if(line["word"] == word):
                     if(line["recognized"]):
                         print(1, 1)
