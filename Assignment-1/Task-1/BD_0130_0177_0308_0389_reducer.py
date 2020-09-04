@@ -4,6 +4,8 @@
 import sys
 
 dict = {}
+dict["1"] = 0
+dict["2"] = 0
 for line in sys.stdin:
 
     line = line.strip()
@@ -17,5 +19,5 @@ for line in sys.stdin:
     except:
         continue
 
-for key in sorted(dict.keys()):
-    print(key, dict[key], sep=",")
+print(dict["1"])
+print(dict["2"])
