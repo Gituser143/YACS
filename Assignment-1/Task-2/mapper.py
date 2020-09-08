@@ -56,7 +56,7 @@ for line in sys.stdin:
             checks += isclean(i, line)
 
             if checks == 5:
-                if(line["word"] == word):
+                if(line["word"].lower() == word.lower()):
                     x0 = line["drawing"][0][0][0]
                     y0 = line["drawing"][0][1][0]
 

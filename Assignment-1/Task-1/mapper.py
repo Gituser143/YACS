@@ -64,7 +64,7 @@ for line in sys.stdin:
             checks += isclean(i, line)
 
             if checks == 5:
-                if(line["word"] == word):
+                if(line["word"].lower() == word.lower()):
                     if(line["recognized"]):
                         print(1, 1)
                     else:
