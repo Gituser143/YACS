@@ -43,13 +43,17 @@ def isclean(type, x):
 
     if type == 3:
         # key_id is 16 characterss
-        if len(x["key_id"]) == 16:
+        if len(x["key_id"]) == 16 and x["key_id"].isnumeric():
             return 1
         return 0
 
     if type == 4:
         # drawing contains atleast one stroke
         if len(x["drawing"]) >= 1:
+            # each stroke contains two arrays of same size
+            for i in x["drawing"]:
+                if len(i) != 2 or len(i[0]) != len(i[1]):
+                    return 0
             return 1
         return 0
 
