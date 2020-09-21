@@ -3,12 +3,8 @@
 
 import sys
 
-#read stdin
 for line in sys.stdin:
-
     try:
-        #prints out tab seperated lines complying to the dataset
-        print(line)
-        
+        print(line)        
     except:
         continue
