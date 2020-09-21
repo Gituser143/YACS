@@ -7,10 +7,10 @@ for line in sys.stdin:
     try:
         line = line.strip()
         key, value = line.split()
-        if key not in dict:
-            dict[key] = float(value)
-        elif key in dict:
+        if key in dict:
             dict[key] += float(value)
+        else:
+            dict[key] = float(value)
     except:
         continue
 
