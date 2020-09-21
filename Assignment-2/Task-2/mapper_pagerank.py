@@ -14,7 +14,7 @@ for line in sys.stdin:
                 v_node, rank = file_line.split(",")
                 if v_node == node:
                     for i in outlinks:
-                        print(i, rank, sep="\t")
+                        print(i, rank/len(outlinks))
                     break
                 if not file_line:
                     break
