@@ -1,5 +1,5 @@
 *.ndjson
 ./Assignment-1/Task-2/output.txt
 *.txt
-v
-v1
+*v
+*v1
