@@ -12,12 +12,11 @@ for line in sys.stdin:
             try:
                 key, value = line.split("\t")
                 if key not in dict:
-                    dict[key] = []
-                    dict[key].append(int(value))
+                    dict[key] = int(value)
                 elif key in dict:
-                    dict[key].append(int(value))
+                    dict[key] += int(value)
             except:
                 continue
 
-for key, value in dict.items():
-    print(key, value, sep="\t")
+for key in dict:
+    print(key, dict[key], sep="\t")
