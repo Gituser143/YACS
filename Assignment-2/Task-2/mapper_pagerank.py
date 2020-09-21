@@ -3,19 +3,19 @@ import sys
 
 dict = {}
 with open("v", "r") as v_file:
-    line = v_file.readline().strip()
-    v_node, rank = line.split(",")
-    dict[int(v_node)] = float(rank)
+    while True:
+        line = v_file.readline()
+        if not line:
+            break
+        v_node,rank = line.strip().split(",")
+        dict[v_node] = float(rank)
 
 for line in sys.stdin:
-    try:
-        node, outlinks = line.split()
-        outlinks = outlinks.split(",")
-        rank = dict[int(node)]
-        contribution = rank/len(outlinks)
+    
+    node, outlinks = line.split()
+    outlinks = outlinks.split(",")
+    rank = dict[node]
+    contribution = rank/len(outlinks)
 
-        for i in outlinks:
-            print(i, contribution)
-
-    except:
-        continue
+    for i in outlinks:
+        print(i, contribution)
