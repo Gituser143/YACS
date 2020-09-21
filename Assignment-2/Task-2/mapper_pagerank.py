@@ -1,14 +1,11 @@
 #!/usr/bin/python3
-""" mapper_adjlist.py """
-
 import sys
 
 for line in sys.stdin:
-    try:
         node, outlinks = line.split()
         outlinks = outlinks.split(",")
         outlinks = [int(i) for i in outlinks]
-        with open("v", "r") as file:
+        with open("v.txt", "r") as file:
             while True:
                 file_line = file.readline().strip()
                 v_node, rank = file_line.split(",")
@@ -18,5 +15,4 @@ for line in sys.stdin:
                     break
                 if not file_line:
                     break
-    except:
-        continue
+
