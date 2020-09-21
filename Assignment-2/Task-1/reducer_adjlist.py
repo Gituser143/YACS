@@ -8,18 +8,19 @@ dict = {}
 for line in sys.stdin:
 
     line = line.strip()
-    
-    try:
-        key, value = line.split("\t")  
-        if key not in dict:
-            dict[key] = []
-            dict[key].append(int(value))
-        elif key in dict:
-            dict[key].append(int(value))
+    if line != '':
+        if line[0] != '#':
+            print(line)
+            try:
+                key, value = line.split("\t")
+                if key not in dict:
+                    dict[key] = []
+                    dict[key].append(int(value))
+                elif key in dict:
+                    dict[key].append(int(value))
 
-    except:
-        continue
+            except:
+                continue
 
-for key,value in dict.items() : 
-    #space seperated
-    print(key,value)
+for key, value in dict.items():
+    print(key, value)
