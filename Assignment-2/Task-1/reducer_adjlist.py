@@ -8,7 +8,7 @@ for line in sys.stdin:
     if line != '':
         if line[0] != '#':
             try:
-                key, value = line.split("\t")
+                key, value = line.split()
                 if key not in dict:
                     dict[key] = []
                     dict[key].append(int(value))
@@ -19,5 +19,6 @@ for line in sys.stdin:
 
 for key, value in dict.items():
     print(key, end=" ")
-    for i in dict[key]:
-        print(i, sep=",")
+    str_value = [str(i) for i in value]
+    comma_sep_value = ",".join(str_value)
+    print(comma_sep_value)
