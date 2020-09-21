@@ -6,7 +6,6 @@ dict = {}
 for line in sys.stdin:
     try:
         line = line.strip()
-        
         key, value = line.split()
         if key not in dict:
             dict[key] = float(value)

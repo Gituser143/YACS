@@ -3,6 +3,6 @@ import sys
 
 for line in sys.stdin:
     try:
-        print(line)        
+        print(line)
     except:
         continue
