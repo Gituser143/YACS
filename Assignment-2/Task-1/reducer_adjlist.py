@@ -21,4 +21,5 @@ for line in sys.stdin:
         continue
 
 for key,value in dict.items() : 
+    #space seperated
     print(key,value)

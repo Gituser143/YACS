@@ -1,16 +1,14 @@
 #!/usr/bin/python3
-""" mapper.py """
+""" mapper_adjlist.py """
 
 import sys
-# Read command line args
-# word = sys.argv[1]
 
-
+#read stdin
 for line in sys.stdin:
 
     try:
+        #prints out tab seperated lines complying to the dataset
         print(line)
         
-
     except:
         continue
