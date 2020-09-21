@@ -18,5 +18,7 @@ for line in sys.stdin:
                     break
                 if not file_line:
                     break
+        file = open("v", "r")
+        values = file.split("\n")
     except:
         continue

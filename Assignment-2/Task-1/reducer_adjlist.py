@@ -18,4 +18,6 @@ for line in sys.stdin:
                 continue
 
 for key, value in dict.items():
-    print(key, value, sep="\t")
+    print(key, end=" ")
+    for i in dict[key]:
+        print(i, sep=",")
