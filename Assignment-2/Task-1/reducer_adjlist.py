@@ -20,4 +20,4 @@ for line in sys.stdin:
                 continue
 
 for key, value in dict.items():
-    print(key, value)
+    print(key, value, sep="\t")
