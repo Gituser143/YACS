@@ -1,6 +1,14 @@
+#!/usr/bin/python3
+import sys
 sum = 0
 count = 0
-with open("v1", "r") as file:
+
+try:
+    file = str(sys.argv[1])
+except:
+    file = 'v1'
+    print("Default input: v1")
+with open(file, "r") as file:
     lines = file.readlines()
     for line in lines:
         count += 1
