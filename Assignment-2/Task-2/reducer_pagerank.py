@@ -15,4 +15,5 @@ for line in sys.stdin:
         continue
 
 for key in dict:
-    print(key, 0.15 + (0.85*dict[key]), sep=",")
+    new_rank = 0.15 + (0.85*dict[key])
+    print("%s,%.5f" % (key, new_rank))
