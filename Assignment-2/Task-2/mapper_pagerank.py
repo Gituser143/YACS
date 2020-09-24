@@ -28,5 +28,5 @@ for line in sys.stdin:
 for key in check:
     print(key, check[key])
 
-#command to run locally
+# command to run locally
 # cat path/to/adjlist | ./mapper_pagerank.py "path/to/v/file" | sort -k1,1 | ./reducer_pagerank.py > path/to/v1

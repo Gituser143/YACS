@@ -25,10 +25,8 @@ with open(v_file_dest, "w") as file:
             # for v file
             if node not in dict:
                 dict[node] = 1
-                # file.write("%s,%d\n" % (node, 1))
             if outlink not in dict:
                 dict[outlink] = 1
-                # file.write("%s,%d\n" % (outlink, 1))
         except:
             continue
 
@@ -36,5 +34,5 @@ with open(v_file_dest, "w") as file:
         comma_sep_value = ",".join(outlinks)
         print(current_node, comma_sep_value)
 
-    for key in dict.sort():
+    for key in sorted(dict.keys()):
         file.write("%s,%d\n" % (key, 1))
