@@ -15,5 +15,5 @@ for line in sys.stdin:
     except:
         continue
 
-for key in dict:
+for key in dict.sort():
     print(key, 1, sep=",")

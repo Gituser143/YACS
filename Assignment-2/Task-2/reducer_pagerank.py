@@ -14,6 +14,6 @@ for line in sys.stdin:
     except:
         continue
 
-for key in dict:
+for key in dict.sort():
     new_rank = 0.15 + (0.85*dict[key])
     print("%s,%.5f" % (key, new_rank))
