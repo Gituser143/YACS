@@ -10,9 +10,9 @@ node = None
 with open(v_file_dest, "w") as file:
 
     for line in sys.stdin:
-        line = line.strip()
-        node, outlink = line.split()
         try:
+            line = line.strip()
+            node, outlink = line.split()
             # for adjlist
             if current_node == node:
                 outlinks.append(outlink)
