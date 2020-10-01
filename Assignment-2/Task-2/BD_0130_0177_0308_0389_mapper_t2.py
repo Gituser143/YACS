@@ -23,13 +23,13 @@ for line in sys.stdin:
         for i in outlinks:
             if i in dict:
                 print(i, contribution)
-                # if i in check:
-                    # del check[i]
+                if i in check:
+                    del check[i]
     except:
         continue
 
-# for node in sorted(check.keys()):
-    # print(node, check[node])
+for node in sorted(check.keys()):
+    print(node, check[node])
 
 # command to run locally
 # cat path/to/adjlist | ./mapper_pagerank.py "path/to/v/file" | sort -k1,1 | ./reducer_pagerank.py > path/to/v1
