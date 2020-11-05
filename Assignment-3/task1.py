@@ -1,12 +1,10 @@
 from pyspark import SparkContext, SparkConf
-import pyspark
 import sys
 from pyspark.sql.types import StructType
 from pyspark.sql.types import StructField
 from pyspark.sql.types import StringType
 from pyspark.sql.types import IntegerType
-# from pyspark.sql.
-
+from pyspark import SQLContext
 #load up the SparkContext object
 conf = SparkConf().setAppName("ShapeStrokes").setMaster("local")
 sc = SparkContext(conf=conf)
@@ -17,14 +15,12 @@ dataset1 = sys.argv[2]#not really needed
 dataset2 = sys.argv[3]
 #init RDD
 shapeRDD = sc.textFile(dataset2)
-# print(shapeRDD.collect())
-# dict = shapeRDD.collect()
 
 #RDD with only required word
 wordlistRDD = shapeRDD.filter(lambda line: word in line.lower())
 
 #Converting RDD to dataframe
-sql = pyspark.SQLContext(sc)
+sql = SQLContext(sc)
 schema = StructType([StructField("word", StringType(), True),
     StructField("timestamp",StringType(),True),
     StructField("reccognized",StringType(),True),
