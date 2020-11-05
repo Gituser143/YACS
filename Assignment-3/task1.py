@@ -1,4 +1,5 @@
 from pyspark import SparkContext, SparkConf
+
 import sys
 
 conf = SparkConf().setAppName("ShapeStrokes").setMaster("local")
@@ -11,4 +12,7 @@ dataset2 = sys.argv[3]
 shapeRDD = sc.textFile(dataset2)
 dict = shapeRDD.collect()
 
-print(dict)
+wordlist = shapeRDD.filter(lambda line: word in line.lower())
+
+
+print(wordlist.collect())
