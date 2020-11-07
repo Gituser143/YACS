@@ -32,10 +32,11 @@ df = sql.createDataFrame(wordlistRDD.map(lambda s: s.split(",")), schema=schema)
 
 # Required answers in dataframe
 x = df.filter(df['reccognized'] == False).agg({"Total_Strokes": "avg"})
-x.show()
+# x = x.withColumnRenamed("avg(Total_Strokes)","Recognized")
+print(round(x.collect()[0][0],5))
 y = df.filter(df['reccognized'] == True).agg({"Total_Strokes": "avg"})
-y.show()
-
+# y = y.withColumnRenamed("avg(Total_Strokes)","notRecognized")
+print(round(y.collect()[0][0],5))
 
 # round answer to 5 digits
 # if word is not present output 0
