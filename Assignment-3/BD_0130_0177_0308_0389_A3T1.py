@@ -24,7 +24,7 @@ if 'recognized' not in (csvRDD.collect()[1].split(',')):
 df = spark.read.csv(dataset, inferSchema=True, header=True)
 
 #filter dataset to contain only metioned word
-df = df.filter(df["word"] ==word)
+df = df.filter(df["word"] == word)
 # Calculate avg for Recogonised drawings
 
 x = df.filter(df['recognized'] == False).agg({"Total_Strokes": "avg"})
@@ -40,8 +40,8 @@ notRecognized = (y.collect()[0][0])
 # Round answer to 5 digits
 if Recognized == None:
     Recognized = 0
-print(round(Recognized,5))
+print(round(Recognized, 5))
 
 if notRecognized == None:
     notRecognized = 0
-print(round(notRecognized,5))
+print(round(notRecognized, 5))
