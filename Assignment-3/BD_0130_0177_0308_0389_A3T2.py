@@ -23,20 +23,21 @@ df2 = sc.read.csv(dataset2, inferSchema=True, header=True)
 only_word1 = df1.filter(df1.word == word)
 only_word2 = df2.filter(df2.word == word)
 
-inner_join = only_word1.join(
-    only_word2, only_word1.key_id == only_word2.key_id)
+inner_join = only_word1.join(only_word2, only_word1.key_id == only_word2.key_id)
 
 not_recognized = inner_join.filter(inner_join.recognized == False)
 
 less_than_k_strokes = not_recognized.filter(not_recognized.Total_Strokes < k)
 
-# counts the number of shapes for each countrycode
-final = less_than_k_strokes.groupBy(less_than_k_strokes.countrycode).count()
+# counts the number of shapes for each countrycode and sort on countrycode
+final = less_than_k_strokes.groupBy(less_than_k_strokes.countrycode).count().sort('countrycode')
 
-# final.show()
-j = i = final.count()
-while (i > 0):
-    country = (final.collect()[j-i][0])
-    n = (final.collect()[j-i][1])
+# Get data and number of rows
+n = final.count()
+rows = final.collect()
+
+# Print data
+for i in range(0, n):
+    country = rows[i][0]
+    n = rows[i][1]
     print(country, n, sep=',')
-    i -= 1
