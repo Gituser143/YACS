@@ -33,7 +33,7 @@ schema = StructType([StructField("word", StringType(), True),
 df = sql.createDataFrame(wordlistRDD.map(lambda s: s.split(",")), schema=schema)
 
 # Calculate avg for Recogonised drawings
-x = df.filter(df['recognized'] == False).agg({"Total_Strokes": "avg"})
+x = df.filter(df['reccognized'] == False).agg({"Total_Strokes": "avg"})
 # Converts DF object to int
 Recognized = (x.collect()[0][0])
 
