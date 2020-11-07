@@ -40,8 +40,8 @@ notRecognized = (y.collect()[0][0])
 # Round answer to 5 digits
 if Recognized == None:
     Recognized = 0
-print(round(Recognized,5))
+print('%.5f'%round(Recognized,5))
 
 if notRecognized == None:
     notRecognized = 0
-print(round(notRecognized,5))
+print('%.5f'%round(notRecognized,5))
