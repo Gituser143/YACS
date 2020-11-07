@@ -20,30 +20,28 @@ wordlistRDD = shape_statRDD.filter(lambda line: word in line.lower())
 sql = SQLContext(sc)
 schema = StructType([StructField("word", StringType(), True),
                      StructField("timestamp", StringType(), True),
-                     StructField("reccognized", StringType(), True),
+                     StructField("recognized", StringType(), True),
                      StructField("key_id", StringType(), True),
                      StructField("Total_Strokes", StringType(), True)])
 
 df = sql.createDataFrame(wordlistRDD.map(lambda s: s.split(",")), schema=schema)
 
 # Calculate avg for Recogonised drawings
-x = df.filter(df['reccognized'] == False).agg({"Total_Strokes": "avg"})
+x = df.filter(df['recognized'] == False).agg({"Total_Strokes": "avg"})
 # Converts DF object to int
-Recognised = (x.collect()[0][0])
+Recognized = (x.collect()[0][0])
 
 # Calculate avg for Not Recogonised drawings
-y = df.filter(df['reccognized'] == True).agg({"Total_Strokes": "avg"})
+y = df.filter(df['recognized'] == True).agg({"Total_Strokes": "avg"})
 # Converts DF object to int
-notRecognised = (y.collect()[0][0])
+notRecognized = (y.collect()[0][0])
 
 # If word is not present output 0
 # Round answer to 5 digits
-if Recognised == None:
-    print(0)
-else:
-    print(round(Recognised,5))
+if Recognized == None:
+    Recognized = 0
+print(round(Recognized,5))
 
-if notRecognised == None:
-    print(0)
-else:
-    print(round(notRecognised,5))
+if notRecognized == None:
+    notRecognized = 0
+print(round(notRecognized,5))
