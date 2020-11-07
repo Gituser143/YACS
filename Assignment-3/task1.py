@@ -1,15 +1,11 @@
-from pyspark import SparkContext
-from pyspark.sql.types import StructType
-from pyspark.sql.types import StructField
-from pyspark.sql.types import StringType
-from pyspark.sql.types import IntegerType
-from pyspark import SQLContext
+from pyspark import SparkContext, SQLContext
+from pyspark.sql.types import StructType, StructField, StringType
 import sys
 
-# load up the SparkContext object
+# Load up the SparkContext object
 sc = SparkContext()
 
-# argument parsing
+# Argument parsing
 word = sys.argv[1]
 dataset1 = sys.argv[2]
 dataset2 = sys.argv[3]
@@ -30,13 +26,24 @@ schema = StructType([StructField("word", StringType(), True),
 
 df = sql.createDataFrame(wordlistRDD.map(lambda s: s.split(",")), schema=schema)
 
-# Required answers in dataframe
+# Calculate avg for Recogonised drawings
 x = df.filter(df['reccognized'] == False).agg({"Total_Strokes": "avg"})
-# x = x.withColumnRenamed("avg(Total_Strokes)","Recognized")
-print(round(x.collect()[0][0],5))
-y = df.filter(df['reccognized'] == True).agg({"Total_Strokes": "avg"})
-# y = y.withColumnRenamed("avg(Total_Strokes)","notRecognized")
-print(round(y.collect()[0][0],5))
+# Converts DF object to int
+Recognised = (x.collect()[0][0])
 
-# round answer to 5 digits
-# if word is not present output 0
+# Calculate avg for Not Recogonised drawings
+y = df.filter(df['reccognized'] == True).agg({"Total_Strokes": "avg"})
+# Converts DF object to int
+notRecognised = (y.collect()[0][0])
+
+# If word is not present output 0
+# Round answer to 5 digits
+if Recognised == None:
+    print(0)
+else:
+    print(round(Recognised,5))
+
+if notRecognised == None:
+    print(0)
+else:
+    print(round(notRecognised,5))
