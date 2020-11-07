@@ -10,8 +10,14 @@ word = sys.argv[1]
 dataset1 = sys.argv[2]
 dataset2 = sys.argv[3]
 
+# Selecting the required dataset
+csvRDD = sc.textFile(dataset1)
+dataset = dataset1
+if 'recognized' not in (csvRDD.collect()[1].split(',')):
+    dataset = dataset2
+
 # init RDD
-shape_statRDD = sc.textFile(dataset2)
+shape_statRDD = sc.textFile(dataset)
 
 # RDD with only required word
 wordlistRDD = shape_statRDD.filter(lambda line: word in line.lower())
