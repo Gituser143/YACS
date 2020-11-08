@@ -32,12 +32,10 @@ less_than_k_strokes = not_recognized.filter(not_recognized.Total_Strokes < k)
 # counts the number of shapes for each countrycode and sort on countrycode
 final = less_than_k_strokes.groupBy(less_than_k_strokes.countrycode).count().sort('countrycode')
 
-# Get data and number of rows
-n = final.count()
-rows = final.collect()
 
 # Print data
-for i in range(0, n):
-    country = rows[i][0]
-    n = rows[i][1]
-    print(country, n, sep=',')
+if len(final) == 0:
+    print(0)
+
+for country in final:
+    print(country["countrycode"], country["count"], sep=",")
