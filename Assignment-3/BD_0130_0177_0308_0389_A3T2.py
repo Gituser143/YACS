@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import sys
 
 from pyspark.sql import SparkSession
