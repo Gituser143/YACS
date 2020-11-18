@@ -2,6 +2,7 @@ import sys
 import os
 import json
 import socket
+import threading
 
 # Verifying command line arguments
 if len(sys.argv) < 3:
@@ -47,21 +48,74 @@ for worker in workers:
 n = len(workers)
 print("Spawned {n} workers".format(n=n))
 
-# Initialise socket
-serverIP = "localhost"
-serverPort = 5000
 
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.bind((serverIP, serverPort))
-s.listen(n)
+def client_listener(n):
+    # Initialise socket
+    server_ip = "localhost"
+    client_port = 5000
 
-while True:
-    sock, address = s.accept()
+    print("Inside thread")
 
-    message = bytes()
+    # Bind socket for client interactions
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client.bind((server_ip, client_port))
+
+    # Listen for incoming requests from clients
+    client.listen(2)
     while True:
-        data = sock.recv(1)
-        if not data:
-            break
-        message += data
-    print(message)
+        sock, address = client.accept()
+        print("Got connection from", address)
+        message = bytes()
+        while True:
+            data = sock.recv(1)
+            if not data:
+                break
+            message += data
+        print(message)
+
+    # ======================================
+    # TODO: Process job details and schdeule
+    # ======================================
+
+
+def worker_listener(n):
+    # =====================================
+    # TODO: Multithread the worker listener
+    # =====================================
+
+    # Initialise socket
+    server_ip = "localhost"
+    worker_port = 5001
+
+    # Bind socket for worker interactions
+    worker = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    worker.bind((server_ip, worker_port))
+
+    # Listen for incoming requests from workers
+    worker.listen(n)
+    while True:
+        sock, address = worker.accept()
+
+        message = bytes()
+        while True:
+            data = sock.recv(1024)
+            if not data:
+                break
+            message += data
+        print(message)
+        # =====================================
+        # TODO: Update metadata on completions
+        # =====================================
+
+
+# Create threads to listen for clients and workers
+client_thread = threading.Thread(target=client_listener, args=(n,))
+worker_thread = threading.Thread(target=worker_listener, args=(n,))
+
+# Start both threads
+client_thread.start()
+worker_thread.start()
+
+# Wait for threads to finish
+client_thread.join()
+worker_thread.join()
