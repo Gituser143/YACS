@@ -29,8 +29,8 @@ only_word_no_part2 = df2.filter(df2.word == word)
 # only_word1 =  only_word_no_part1.coalesce(1)      ## improves the time by around 3 seconds (Time = 7.405009508132935, args = bathtub 50)
 # only_word2 =  only_word_no_part2.coalesce(1)
 
-only_word1 =  only_word_no_part1        ## Time = 10.717103481292725, args = bathtub 50
-only_word2 =  only_word_no_part2
+only_word1 = only_word_no_part1  # Time = 10.717103481292725, args = bathtub 50
+only_word2 = only_word_no_part2
 
 inner_join = only_word1.join(only_word2, only_word1.key_id == only_word2.key_id)
 
