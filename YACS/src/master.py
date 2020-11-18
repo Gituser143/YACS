@@ -4,6 +4,12 @@ import json
 import socket
 import threading
 
+# message = b'{"job_id": "0", "map_tasks": [{"task_id": "0_M0", "duration": 4}, {"task_id": "0_M1", "duration": 1}], "reduce_tasks": [{"task_id": "0_R0", "duration": 3}, {"task_id": "0_R1", "duration": 3}]}'
+
+# job_data = json.loads(message)
+
+# print(job_data.keys())
+
 # Verifying command line arguments
 if len(sys.argv) < 3:
     print("ERROR: Not Enough Arguments")
@@ -23,8 +29,17 @@ json_data = json.load(config_file)
 workers = json_data["workers"]
 
 # Stats holds information on each worker
-# format = worker_id: [total_slots, slots_available, [ip, port]]
+# Format = worker_id: [total_slots, slots_available, [ip, port]]
 stats = dict()
+
+# Holds list of map and dependent reduce tasks for a given job
+# Format = jobId: [[map tasks][reduce tasks]]
+task_dependencies = dict()
+
+# Mutex to be used when modifying data
+task_mutex = threading.Lock()
+stats_mutex = threading.Lock()
+
 
 # Parse workers
 for worker in workers:
@@ -71,11 +86,25 @@ def client_listener(n):
             if not data:
                 break
             message += data
-        print(message)
 
-    # ======================================
-    # TODO: Process job details and schdeule
-    # ======================================
+        message = message.decode()
+
+        # Load into json format
+        job_data = json.loads(message)
+        job_id = job_data["job_id"]
+        map_tasks = job_data["map_tasks"]
+        reduce_tasks = job_data["reduce_tasks"]
+
+        # Add job to list of task dependencies
+        task_mutex.acquire()
+        task_dependencies[job_id] = [map_tasks, reduce_tasks]
+        task_mutex.release()
+
+        print(job_id, map_tasks, reduce_tasks)
+
+    # =========================================
+    # TODO: Schdeule map tasks and update meta
+    # =========================================
 
 
 def worker_listener(n):
@@ -103,9 +132,14 @@ def worker_listener(n):
                 break
             message += data
         print(message)
-        # =====================================
-        # TODO: Update metadata on completions
-        # =====================================
+
+        # ========================================
+        # TODO: Update task_dependencies and meta
+        # ========================================
+
+        # ===================================================
+        # TODO: Schedule Reduce task if all map have finished
+        # ===================================================
 
 
 # Create threads to listen for clients and workers
