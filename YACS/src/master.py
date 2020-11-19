@@ -3,6 +3,7 @@ import os
 import json
 import socket
 import threading
+import time
 
 # message = b'{"job_id": "0", "map_tasks": [{"task_id": "0_M0", "duration": 4}, {"task_id": "0_M1", "duration": 1}], "reduce_tasks": [{"task_id": "0_R0", "duration": 3}, {"task_id": "0_R1", "duration": 3}]}'
 
@@ -20,6 +21,7 @@ if len(sys.argv) < 3:
 conf_path = "YACS/src/config.json"
 conf_path = sys.argv[1]
 sched_algo = sys.argv[2]
+sched_algo = sched_algo.upper()
 
 # Load JSON config
 config_file = open(conf_path, "r")
@@ -29,11 +31,13 @@ json_data = json.load(config_file)
 workers = json_data["workers"]
 
 # Stats holds information on each worker
-# Format = worker_id: [total_slots, slots_available, [ip, port]]
+# Format:
+#   worker_id: [total_slots, slots_available, [ip, port]]
 stats = dict()
 
 # Holds list of map and dependent reduce tasks for a given job
-# Format = jobId: [[map tasks][reduce tasks]]
+# Format:
+#   jobId: [[map tasks][reduce tasks]]
 task_dependencies = dict()
 
 # Mutex to be used when modifying data
@@ -41,27 +45,67 @@ task_mutex = threading.Lock()
 stats_mutex = threading.Lock()
 
 
-# Parse workers
-for worker in workers:
-    worker_id = worker["worker_id"]
-    slots = worker["slots"]
-    port = worker["port"]
+# Variables for Least-Loaded
 
-    # Insert meta
-    stats[worker_id] = [slots, slots, ["localhost", port]]
+# Holds current free slots for workers
+# Format:
+#   num_free_slots: [workers with said free slots]
+loads = dict()
 
-    # Command line args meant for worker.py
-    args = ["worker.py", str(port), str(worker_id)]
 
-    # Create worker processes
-    pid = os.fork()
-    if pid == -1:
-        print("Faile to spawn worker {id}".format(id=worker_id))
-    elif pid == 0:
-        os.execv("worker.py", args)
+def init_meta(stats, sched_algo):
+    # Least loaded by default
+    if sched_algo == "RANDOM":
+        pass
+    elif sched_algo == "RR":
+        pass
+    else:
+        # Init free slots in loads map
+        for worker in stats:
+            free_slots, _, _ = stats[worker]
+            if free_slots in loads:
+                loads[free_slots].append(worker)
+            else:
+                loads[free_slots] = [worker]
 
-n = len(workers)
-print("Spawned {n} workers".format(n=n))
+
+def schedule_job(job_ID, sched_algo):
+    if sched_algo == "RANDOM":
+        pass
+    elif sched_algo == "RR":
+        pass
+    else:
+
+        # Get Job to run
+        task_mutex.acquire()
+        job = task_dependencies[job_ID]
+        task_mutex.release()
+
+        # Get least load
+        stats_mutex.acquire()
+        least_load = max(loads)
+        stats_mutex.release()
+
+        # =======================================
+        # TODO: Replace busy wait with semaphore
+        # =======================================
+        while least_load == 0:
+            time.sleep(1)
+            stats_mutex.acquire()
+            least_load = max(loads)
+            stats_mutex.release()
+
+        # Get least loaded worker
+        stats_mutex.acquire()
+        worker = loads[least_load][0]
+        stats_mutex.release()
+
+        # Assign slot of worker for task
+        stats_mutex.acquire()
+        # Remove worker from current loads and add to loads-1
+        # Send task to worker
+        # Repeat process for all map tasks
+        stats_mutex.release()
 
 
 def client_listener(n):
@@ -140,6 +184,34 @@ def worker_listener(n):
         # ===================================================
         # TODO: Schedule Reduce task if all map have finished
         # ===================================================
+
+
+# Parse workers
+for worker in workers:
+    worker_id = worker["worker_id"]
+    slots = worker["slots"]
+    port = worker["port"]
+
+    # Insert meta
+    stats[worker_id] = [slots, slots, ["localhost", port]]
+
+    # Command line args meant for worker.py
+    args = ["worker.py", str(port), str(worker_id)]
+
+    # Create worker processes
+    pid = os.fork()
+    if pid == -1:
+        print("Faile to spawn worker {id}".format(id=worker_id))
+    elif pid == 0:
+        os.execv("worker.py", args)
+
+# Initialise metatdata
+init_meta(stats, sched_algo)
+
+print(loads)
+
+n = len(workers)
+print("Spawned {n} workers".format(n=n))
 
 
 # Create threads to listen for clients and workers
