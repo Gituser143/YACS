@@ -242,6 +242,7 @@ def worker_listener(n):
 
         task_mutex.release()
 
+        # Update metadata
         if sched_algo == "RR":
             pass
         elif sched_algo == "RANDOM":
