@@ -44,7 +44,6 @@ task_dependencies = dict()
 task_mutex = threading.Lock()
 stats_mutex = threading.Lock()
 
-
 # Variables for Least-Loaded
 
 # Holds current free slots for workers
@@ -69,6 +68,19 @@ def init_meta(stats, sched_algo):
                 loads[free_slots] = [worker]
 
 
+def send_job(worker_id, task):
+    # Get socket details of specified worker
+    worker_ip, worker_port = stats[worker_id][2]
+
+    # Open socket connection
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.connect((worker_ip, worker_port))
+        message = json.dumps(task)
+
+        # Send Task
+        s.send(message.encode())
+
+
 def schedule_job(job_ID, sched_algo):
     if sched_algo == "RANDOM":
         pass
@@ -81,39 +93,40 @@ def schedule_job(job_ID, sched_algo):
         job = task_dependencies[job_ID]
         task_mutex.release()
 
-        # Get least load
-        stats_mutex.acquire()
-        least_load = max(loads)
-        stats_mutex.release()
+        map_tasks = job[0]
 
-        # =======================================
-        # TODO: Replace busy wait with semaphore
-        # =======================================
-        while least_load == 0:
-            time.sleep(1)
+        for task in map_tasks:
+
+            # Ensure empty slots are available
+            has_empty_slots.acquire()
+
+            # Get least load
             stats_mutex.acquire()
             least_load = max(loads)
             stats_mutex.release()
 
-        # Get least loaded worker
-        stats_mutex.acquire()
-        worker = loads[least_load][0]
-        stats_mutex.release()
+            # Get least loaded worker
+            stats_mutex.acquire()
+            # Get least loaded worker
+            worker_id = loads[least_load].pop(0)
+            if len(loads[least_load]) == 0:
+                del loads[least_load]
 
-        # Assign slot of worker for task
-        stats_mutex.acquire()
-        # Remove worker from current loads and add to loads-1
-        # Send task to worker
-        # Repeat process for all map tasks
-        stats_mutex.release()
+            # Send task to worker
+            send_job(worker_id, task)
+
+            # Update free slots metatdata
+            if least_load-1 in loads:
+                loads[least_load-1].append(worker_id)
+            else:
+                loads[least_load-1] = [worker_id]
+            stats_mutex.release()
 
 
 def client_listener(n):
     # Initialise socket
     server_ip = "localhost"
     client_port = 5000
-
-    print("Inside thread")
 
     # Bind socket for client interactions
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -144,11 +157,8 @@ def client_listener(n):
         task_dependencies[job_id] = [map_tasks, reduce_tasks]
         task_mutex.release()
 
-        print(job_id, map_tasks, reduce_tasks)
-
-    # =========================================
-    # TODO: Schdeule map tasks and update meta
-    # =========================================
+        # Schedule job on workers
+        schedule_job(job_id, sched_algo)
 
 
 def worker_listener(n):
@@ -186,6 +196,8 @@ def worker_listener(n):
         # ===================================================
 
 
+total_slots = 0
+
 # Parse workers
 for worker in workers:
     worker_id = worker["worker_id"]
@@ -194,6 +206,7 @@ for worker in workers:
 
     # Insert meta
     stats[worker_id] = [slots, slots, ["localhost", port]]
+    total_slots += slots
 
     # Command line args meant for worker.py
     args = ["worker.py", str(port), str(worker_id)]
@@ -206,9 +219,8 @@ for worker in workers:
         os.execv("worker.py", args)
 
 # Initialise metatdata
+has_empty_slots = threading.Semaphore(total_slots)
 init_meta(stats, sched_algo)
-
-print(loads)
 
 n = len(workers)
 print("Spawned {n} workers".format(n=n))
