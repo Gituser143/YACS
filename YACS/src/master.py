@@ -39,6 +39,12 @@ Format:
 '''
 task_dependencies = dict()
 
+
+'''
+Holds job IDs in queue for scheduling
+'''
+job_queue = []
+
 # Variables for Least-Loaded scheduling
 
 '''
@@ -51,6 +57,7 @@ loads = dict()
 # Mutexes to be used when modifying data
 task_mutex = threading.Lock()
 stats_mutex = threading.Lock()
+queue_mutex = threading.Lock()
 
 
 def init_meta(stats, sched_algo):
@@ -187,8 +194,11 @@ def client_listener(n):
         task_dependencies[job_id] = {"map": map_dict, "reduce": reduce_dict}
         task_mutex.release()
 
-        # Schedule job on workers
-        schedule_job(job_id, sched_algo)
+        # Add job to execution queue
+        queue_mutex.acquire()
+        job_queue.append(job_id)
+        has_jobs.release()
+        queue_mutex.release()
 
 
 def worker_listener(n):
@@ -232,9 +242,6 @@ def worker_listener(n):
         task_type = response["task_type"]
         worker_id = response["worker_id"]
 
-        # ========================================
-        # TODO: Update task_dependencies and meta
-        # ========================================
         task_mutex.acquire()
 
         # Remove job from dependencies
@@ -275,6 +282,20 @@ def worker_listener(n):
                 schedule_job(job_id, sched_algo, "reduce")
 
 
+def job_scheduler():
+    while True:
+        # Check if jobs are in queue
+        has_jobs.acquire()
+
+        # Get job to schedule
+        queue_mutex.acquire()
+        job_id = job_queue.pop(0)
+        queue_mutex.release()
+
+        # Schedule job
+        schedule_job(job_id, sched_algo)
+
+
 # Load JSON config
 config_file = open(conf_path, "r")
 json_data = json.load(config_file)
@@ -306,6 +327,7 @@ for worker in workers:
 
 # Initialise metatdata
 has_empty_slots = threading.Semaphore(total_slots)
+has_jobs = threading.Semaphore(0)
 init_meta(stats, sched_algo)
 
 n = len(workers)
@@ -315,11 +337,14 @@ print("Spawned {n} workers".format(n=n))
 # Create threads to listen for clients and workers
 client_thread = threading.Thread(target=client_listener, args=(n,))
 worker_thread = threading.Thread(target=worker_listener, args=(n,))
+scheduler_thread = threading.Thread(target=job_scheduler)
 
-# Start both threads
+# Start threads
 client_thread.start()
 worker_thread.start()
+scheduler_thread.start()
 
 # Wait for threads to finish
 client_thread.join()
 worker_thread.join()
+scheduler_thread.join()
