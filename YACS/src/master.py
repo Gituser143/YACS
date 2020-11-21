@@ -262,6 +262,9 @@ def worker_listener(n):
 
             stats_mutex.release()
 
+        # Increment empty slots
+        has_empty_slots.release()
+
         # If no more map tasks exist, schedule reduce tasks
         if task_type == "map":
             task_mutex.acquire()
