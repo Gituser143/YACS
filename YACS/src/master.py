@@ -3,6 +3,7 @@ import os
 import json
 import socket
 import threading
+import random
 import time
 
 # message = b'{"job_id": "0", "map_tasks": [{"task_id": "0_M0", "duration": 4}, {"task_id": "0_M1", "duration": 1}], "reduce_tasks": [{"task_id": "0_R0", "duration": 3}, {"task_id": "0_R1", "duration": 3}]}'
@@ -101,6 +102,67 @@ def send_job(worker_id, job_id, task):
         s.send(message.encode())
 
 
+def random_sched(job_id, task_type):
+    task_mutex.acquire()
+    tasks = task_dependencies[job_id][task_type]
+    task_mutex.release()
+
+    for task in tasks:
+        # Select worker
+        stats_copy = stats.copy()
+        chosen_worker = random.choice(list(stats_copy))
+
+        # Ensure there exists an empty slot
+        has_empty_slots.acquire()
+
+        # Get a random worker with at least 1 empty slot
+        while stats_copy[chosen_worker][1] == 0:
+            del stats_copy[chosen_worker]
+            chosen_worker = random.choice(list(stats_copy))
+
+        # Update slot details in metadata
+        stats_mutex.acquire()
+        stats[chosen_worker][1] -= 1
+        stats_mutex.release()
+
+        send_job(chosen_worker, job_id, task)
+
+
+def least_loaded_sched(job_id, task_type="map"):
+    # Get tasks to run
+    task_mutex.acquire()
+    tasks = task_dependencies[job_id][task_type]
+    task_mutex.release()
+
+    for task_id in tasks:
+        task = tasks[task_id]
+
+        # Ensure empty slots are available
+        has_empty_slots.acquire()
+
+        # Critical section to update metatdata
+        stats_mutex.acquire()
+
+        # Get least load
+        least_load = max(loads)
+
+        # Get least loaded worker
+        worker_id = loads[least_load].pop(0)
+        if len(loads[least_load]) == 0:
+            del loads[least_load]
+
+        # Update free slots metatdata
+        if least_load-1 in loads:
+            loads[least_load-1].append(worker_id)
+        else:
+            loads[least_load-1] = [worker_id]
+
+        stats_mutex.release()
+
+        # Send task to worker
+        send_job(worker_id, job_id, task)
+
+
 def schedule_job(job_id, sched_algo, task_type="map"):
     '''
     Given a job ID and a scheduling algorithm,
@@ -109,46 +171,12 @@ def schedule_job(job_id, sched_algo, task_type="map"):
     scheduing algorithm.
     '''
 
-    # Get Job to run
-    task_mutex.acquire()
-    job = task_dependencies[job_id]
-    task_mutex.release()
-
-    # Get tasks with no dependencies
-    tasks = job[task_type]
-
     if sched_algo == "RANDOM":
-        pass
+        random_sched(job_id, task_type)
     elif sched_algo == "RR":
         pass
     else:
-        for task_id in tasks:
-            task = tasks[task_id]
-
-            # Ensure empty slots are available
-            has_empty_slots.acquire()
-
-            # Critical section to update metatdata
-            stats_mutex.acquire()
-
-            # Get least load
-            least_load = max(loads)
-
-            # Get least loaded worker
-            worker_id = loads[least_load].pop(0)
-            if len(loads[least_load]) == 0:
-                del loads[least_load]
-
-            # Update free slots metatdata
-            if least_load-1 in loads:
-                loads[least_load-1].append(worker_id)
-            else:
-                loads[least_load-1] = [worker_id]
-
-            stats_mutex.release()
-
-            # Send task to worker
-            send_job(worker_id, job_id, task)
+        least_loaded_sched(job_id, task_type)
 
 
 def client_listener(n):
@@ -253,7 +281,11 @@ def worker_listener(n):
         if sched_algo == "RR":
             pass
         elif sched_algo == "RANDOM":
-            pass
+            # Update free slots
+            stats_mutex.acquire()
+            stats[worker_id][1] += 1
+            stats_mutex.release()
+
         else:
             stats_mutex.acquire()
 
