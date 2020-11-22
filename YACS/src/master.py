@@ -128,7 +128,35 @@ def random_sched(job_id, task_type):
         send_job(chosen_worker, job_id, task)
 
 
-def least_loaded_sched(job_id, task_type="map"):
+def round_robin_sched(job_id, task_type):
+    # Get the tasks
+    task_mutex.acquire()
+    tasks = task_dependencies[job_id][task_type]
+    task_mutex.release()
+    
+    for task in tasks:
+        has_empty_slots.acquire()
+
+        stats_copy = stats.copy()
+        
+        chosen_worker = list(stats_copy)[0]
+
+        # Finding a slot that is free
+        while stats_copy[chosen_worker][1] == 0:
+            del stats_copy[chosen_worker]
+            chosen_worker = list(stats_copy)[0]
+        
+        stats_mutex.acquire()
+        stats[chosen_worker][1] -= 1    # Decrement slot for chosen worker
+        popped_item = stats[chosen_worker]      # [Abstraction of dict as queue] dequeue the worker from stats
+        del stats[chosen_worker]
+        stats[chosen_worker] = popped_item      # Enqueue it back to the end of queue (dict)
+        stats_mutex.release()
+
+        send_job(chosen_worker, job_id, task)
+
+
+def least_loaded_sched(job_id, task_type):
     # Get tasks to run
     task_mutex.acquire()
     tasks = task_dependencies[job_id][task_type]
@@ -174,7 +202,7 @@ def schedule_job(job_id, sched_algo, task_type="map"):
     if sched_algo == "RANDOM":
         random_sched(job_id, task_type)
     elif sched_algo == "RR":
-        pass
+        round_robin_sched(job_id, task_type)
     else:
         least_loaded_sched(job_id, task_type)
 
@@ -279,7 +307,10 @@ def worker_listener(n):
 
         # Update metadata
         if sched_algo == "RR":
-            pass
+            stats_mutex.acquire()
+            stats[worker_id][1] += 1
+            stats_mutex.release()
+
         elif sched_algo == "RANDOM":
             # Update free slots
             stats_mutex.acquire()
