@@ -40,6 +40,17 @@ Format:
 '''
 task_dependencies = dict()
 
+'''
+Used for round robin 
+Holds the worker IDs in a queue
+'''
+worker_queue = []
+
+'''
+Used for round robin
+Holds the previous index of the worker used
+'''
+worker_prev_idx = -1
 
 '''
 Holds job IDs in queue for scheduling
@@ -60,7 +71,6 @@ task_mutex = threading.Lock()
 stats_mutex = threading.Lock()
 queue_mutex = threading.Lock()
 
-
 def init_meta(stats, sched_algo):
     '''
     Function to Initialise metatda. Takes in the
@@ -70,7 +80,10 @@ def init_meta(stats, sched_algo):
     if sched_algo == "RANDOM":
         pass
     elif sched_algo == "RR":
-        pass
+        stats_mutex.acquire()
+        worker_queue = [worker_id for worker_id in sorted(stats)]
+        stats_mutex.release()
+        worker_prev_idx = -1
     else:
         # Init free slots in loads map
         for worker in stats:
@@ -142,21 +155,24 @@ def round_robin_sched(job_id, task_type):
         stats_mutex.acquire()
         stats_copy = stats.copy()
         stats_mutex.release()
-
-        chosen_worker = list(stats_copy)[0]
+        
+        queue_mutex.acquire()
+        print(worker_queue)
+        curr_idx = (worker_prev_idx+1)%len(worker_queue)
+        
+        chosen_worker = worker_queue[curr_idx]
 
         # Finding a slot that is free
         while stats_copy[chosen_worker][1] == 0:
-            del stats_copy[chosen_worker]
-            chosen_worker = list(stats_copy)[0]
+            curr_idx = (curr_idx + 1)%len(worker_queue)
+            chosen_worker = worker_queue[curr_idx]
 
         stats_mutex.acquire()
         stats[chosen_worker][1] -= 1    # Decrement slot for chosen worker
-        popped_item = stats[chosen_worker]      # [Abstraction of dict as queue] dequeue the worker from stats
-        del stats[chosen_worker]
-        stats[chosen_worker] = popped_item      # Enqueue it back to the end of queue (dict)
         stats_mutex.release()
 
+        worker_prev_idx = curr_idx      # Keep track of the previously used worker index
+        queue_mutex.release()
         send_job(chosen_worker, job_id, task)
 
 
