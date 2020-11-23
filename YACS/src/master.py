@@ -317,23 +317,11 @@ def worker_listener(n):
     dependent tasks if any.
     '''
 
-    # =====================================
-    # TODO: Multithread the worker listener
-    # =====================================
-
-    # Initialise socket
-    server_ip = "localhost"
-    worker_port = 5001
-
-    # Bind socket for worker interactions
-    worker = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    worker.bind((server_ip, worker_port))
-
-    # Listen for incoming requests from workers
-    worker.listen(n)
-    while True:
-        sock, address = worker.accept()
-
+    def worker_connection(sock):
+        '''
+        Function used to handle one worker connection.
+        Called with threads to support threaded server.
+        '''
         message = bytes()
         while True:
             data = sock.recv(1024)
@@ -395,6 +383,32 @@ def worker_listener(n):
 
             if remaining_map_tasks == 0:
                 schedule_job(job_id, sched_algo, "reduce")
+
+    # Initialise socket
+    server_ip = "localhost"
+    worker_port = 5001
+
+    # Bind socket for worker interactions
+    worker = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    worker.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    worker.bind((server_ip, worker_port))
+
+    # Initialise list of threads
+    threads = []
+
+    # Listen for incoming requests from workers
+    while True:
+        worker.listen(n)
+        sock, address = worker.accept()
+
+        new_thread = threading.Thread(target=worker_connection, args=(sock,))
+
+        new_thread.start()
+
+        threads.append(new_thread)
+
+    for thread in threads:
+        thread.join()
 
 
 def job_scheduler():
