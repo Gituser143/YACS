@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import sys
+import json
 import time
 import socket
 
@@ -22,7 +23,7 @@ print("Spawned worker {id} on port {p}".format(p=port, id=id))
 task_listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 task_listener.bind((ip, int(port)))
 
-task_listener.listen(1)
+task_listener.listen()
 while True:
     sock, address = task_listener.accept()
 
@@ -33,7 +34,25 @@ while True:
             break
         message += data
     message = message.decode()
-    print("Got", message, "in worker", id)
+
+    message = json.loads(message)
+    print("Got", message["task"]["task_id"], "in worker", id)
+
+    response = dict()
+    response["job_id"] = message["job_id"]
+    response["task_id"] = message["task"]["task_id"]
+    response["task_type"] = message["task_type"]
+    response["worker_id"] = id
+
+    # Open socket connection
+    master_ip = "localhost"
+    master_port = 5001
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.connect((master_ip, master_port))
+        response = json.dumps(response)
+
+        # Send Task
+        s.send(response.encode())
 
     # ===================================
     # TODO: Add task to pool and process

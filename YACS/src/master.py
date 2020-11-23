@@ -91,7 +91,7 @@ def init_meta(stats, sched_algo):
                 loads[free_slots] = [worker]
 
 
-def send_job(worker_id, job_id, task):
+def send_job(worker_id, job_id, task, task_type):
     '''
     Given a worker and a task, the function sends
     the task to the worker through a socket.
@@ -101,12 +101,12 @@ def send_job(worker_id, job_id, task):
     worker_ip, worker_port = stats[worker_id][2]
 
     # Create message to send
-    message = {"job_id": job_id, "task": task}
+    message = {"job_id": job_id, "task_type": task_type, "task": task}
 
     # Open socket connection
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((worker_ip, worker_port))
-        message = json.dumps(str(message))
+        message = json.dumps(message)
 
         # Send Task
         s.send(message.encode())
@@ -122,7 +122,7 @@ def random_sched(job_id, task_type):
 
     # Get tasks
     task_mutex.acquire()
-    tasks = task_dependencies[job_id][task_type]
+    tasks = task_dependencies[job_id][task_type].copy()
     task_mutex.release()
 
     for task in tasks:
@@ -146,7 +146,7 @@ def random_sched(job_id, task_type):
         stats[chosen_worker][1] -= 1
         stats_mutex.release()
 
-        send_job(chosen_worker, job_id, task)
+        send_job(chosen_worker, job_id, task, task_type)
 
 
 def round_robin_sched(job_id, task_type):
@@ -161,7 +161,7 @@ def round_robin_sched(job_id, task_type):
 
     # Get the tasks
     task_mutex.acquire()
-    tasks = task_dependencies[job_id][task_type]
+    tasks = task_dependencies[job_id][task_type].copy()
     task_mutex.release()
 
     for task in tasks:
@@ -197,7 +197,7 @@ def round_robin_sched(job_id, task_type):
         queue_mutex.release()
 
         # Send job to worker
-        send_job(chosen_worker, job_id, task)
+        send_job(chosen_worker, job_id, task, task_type)
 
 
 def least_loaded_sched(job_id, task_type):
@@ -210,7 +210,7 @@ def least_loaded_sched(job_id, task_type):
 
     # Get tasks to run
     task_mutex.acquire()
-    tasks = task_dependencies[job_id][task_type]
+    tasks = task_dependencies[job_id][task_type].copy()
     task_mutex.release()
 
     for task_id in tasks:
@@ -239,7 +239,7 @@ def least_loaded_sched(job_id, task_type):
         stats_mutex.release()
 
         # Send task to worker
-        send_job(worker_id, job_id, task)
+        send_job(worker_id, job_id, task, task_type)
 
 
 def schedule_job(job_id, sched_algo="LL", task_type="map"):
