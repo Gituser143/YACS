@@ -109,7 +109,9 @@ def random_sched(job_id, task_type):
 
     for task in tasks:
         # Select worker
+        stats_mutex.acquire()
         stats_copy = stats.copy()
+        stats_mutex.release()
         chosen_worker = random.choice(list(stats_copy))
 
         # Ensure there exists an empty slot
@@ -133,19 +135,21 @@ def round_robin_sched(job_id, task_type):
     task_mutex.acquire()
     tasks = task_dependencies[job_id][task_type]
     task_mutex.release()
-    
+
     for task in tasks:
         has_empty_slots.acquire()
 
+        stats_mutex.acquire()
         stats_copy = stats.copy()
-        
+        stats_mutex.release()
+
         chosen_worker = list(stats_copy)[0]
 
         # Finding a slot that is free
         while stats_copy[chosen_worker][1] == 0:
             del stats_copy[chosen_worker]
             chosen_worker = list(stats_copy)[0]
-        
+
         stats_mutex.acquire()
         stats[chosen_worker][1] -= 1    # Decrement slot for chosen worker
         popped_item = stats[chosen_worker]      # [Abstraction of dict as queue] dequeue the worker from stats
