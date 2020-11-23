@@ -81,9 +81,9 @@ def init_meta(stats, sched_algo):
         pass
     elif sched_algo == "RR":
         stats_mutex.acquire()
-        worker_queue = [worker_id for worker_id in sorted(stats)]
+        for worker_id in sorted(stats):
+            worker_queue.append(worker_id)
         stats_mutex.release()
-        worker_prev_idx = -1
     else:
         # Init free slots in loads map
         for worker in stats:
@@ -144,6 +144,7 @@ def random_sched(job_id, task_type):
 
 
 def round_robin_sched(job_id, task_type):
+    global worker_prev_idx
     # Get the tasks
     task_mutex.acquire()
     tasks = task_dependencies[job_id][task_type]
@@ -157,7 +158,6 @@ def round_robin_sched(job_id, task_type):
         stats_mutex.release()
         
         queue_mutex.acquire()
-        print(worker_queue)
         curr_idx = (worker_prev_idx+1)%len(worker_queue)
         
         chosen_worker = worker_queue[curr_idx]
