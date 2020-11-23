@@ -6,12 +6,6 @@ import threading
 import random
 import time
 
-# message = b'{"job_id": "0", "map_tasks": [{"task_id": "0_M0", "duration": 4}, {"task_id": "0_M1", "duration": 1}], "reduce_tasks": [{"task_id": "0_R0", "duration": 3}, {"task_id": "0_R1", "duration": 3}]}'
-
-# job_data = json.loads(message)
-
-# print(job_data.keys())
-
 # Verifying command line arguments
 if len(sys.argv) < 3:
     print("ERROR: Not Enough Arguments")
@@ -41,7 +35,14 @@ Format:
 task_dependencies = dict()
 
 '''
-Used for round robin 
+Holds job IDs in queue for scheduling
+'''
+job_queue = []
+
+# variables used for Round Robin
+
+'''
+Used for round robin
 Holds the worker IDs in a queue
 '''
 worker_queue = []
@@ -51,11 +52,6 @@ Used for round robin
 Holds the previous index of the worker used
 '''
 worker_prev_idx = -1
-
-'''
-Holds job IDs in queue for scheduling
-'''
-job_queue = []
 
 # Variables for Least-Loaded scheduling
 
@@ -70,6 +66,7 @@ loads = dict()
 task_mutex = threading.Lock()
 stats_mutex = threading.Lock()
 queue_mutex = threading.Lock()
+
 
 def init_meta(stats, sched_algo):
     '''
@@ -116,15 +113,24 @@ def send_job(worker_id, job_id, task):
 
 
 def random_sched(job_id, task_type):
+    '''
+    The function schedules all tasks of task_type (map/reduce)
+    from a given job with id = job_id. It is scheduled according
+    to the random algorithm (scheduled randomly into a worker
+    with free slots).
+    '''
+
+    # Get tasks
     task_mutex.acquire()
     tasks = task_dependencies[job_id][task_type]
     task_mutex.release()
 
     for task in tasks:
-        # Select worker
         stats_mutex.acquire()
         stats_copy = stats.copy()
         stats_mutex.release()
+
+        # Select worker
         chosen_worker = random.choice(list(stats_copy))
 
         # Ensure there exists an empty slot
@@ -144,39 +150,64 @@ def random_sched(job_id, task_type):
 
 
 def round_robin_sched(job_id, task_type):
+    '''
+    This fucntion schedules all tasks of type task_type
+    from job with id = job_id. The tasks are scheduled
+    using round robin algorithm (Cyclically schedule tasks
+    across workers with empty slots).
+    '''
+
     global worker_prev_idx
+
     # Get the tasks
     task_mutex.acquire()
     tasks = task_dependencies[job_id][task_type]
     task_mutex.release()
 
     for task in tasks:
+        # Ensure cluster has empty slots
         has_empty_slots.acquire()
 
+        # Get a copy of stats
         stats_mutex.acquire()
         stats_copy = stats.copy()
         stats_mutex.release()
-        
+
+        # Get current worker index
         queue_mutex.acquire()
-        curr_idx = (worker_prev_idx+1)%len(worker_queue)
-        
+        curr_idx = (worker_prev_idx+1) % len(worker_queue)
+        queue_mutex.release()
+
+        # Choose a worker
         chosen_worker = worker_queue[curr_idx]
 
-        # Finding a slot that is free
+        # Finding a worker with a free slot
         while stats_copy[chosen_worker][1] == 0:
-            curr_idx = (curr_idx + 1)%len(worker_queue)
+            curr_idx = (curr_idx + 1) % len(worker_queue)
             chosen_worker = worker_queue[curr_idx]
 
+        # Decrement slot for chosen worker
         stats_mutex.acquire()
-        stats[chosen_worker][1] -= 1    # Decrement slot for chosen worker
+        stats[chosen_worker][1] -= 1
         stats_mutex.release()
 
-        worker_prev_idx = curr_idx      # Keep track of the previously used worker index
+        # Keep track of the previously used worker index
+        queue_mutex.acquire()
+        worker_prev_idx = curr_idx
         queue_mutex.release()
+
+        # Send job to worker
         send_job(chosen_worker, job_id, task)
 
 
 def least_loaded_sched(job_id, task_type):
+    '''
+    This fucntion schedules all tasks of type task_type
+    from job with id = job_id. The tasks are scheduled
+    using least loaded algorithm (Assign task to workers
+    with least amount of load, i.e, more number of free slots).
+    '''
+
     # Get tasks to run
     task_mutex.acquire()
     tasks = task_dependencies[job_id][task_type]
@@ -211,12 +242,13 @@ def least_loaded_sched(job_id, task_type):
         send_job(worker_id, job_id, task)
 
 
-def schedule_job(job_id, sched_algo, task_type="map"):
+def schedule_job(job_id, sched_algo="LL", task_type="map"):
     '''
     Given a job ID and a scheduling algorithm,
-    the function schedules all map tasks in
-    the given job on workers according to the
-    scheduing algorithm.
+    the function schedules all tasks of specified
+    type in the given job on workers according to
+    the scheduing algorithm specified. The scheduling
+    algorithm defaults to least loaded when not specified.
     '''
 
     if sched_algo == "RANDOM":
@@ -366,6 +398,11 @@ def worker_listener(n):
 
 
 def job_scheduler():
+    '''
+    Function which picks jobs from the job queue
+    and schedules them according to preset
+    scheduling algorithm.
+    '''
     while True:
         # Check if jobs are in queue
         has_jobs.acquire()
