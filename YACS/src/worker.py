@@ -4,6 +4,7 @@ import sys
 import json
 import time
 import socket
+import threading
 
 if len(sys.argv) < 3:
     print("ERROR: Not Enough Arguments")
@@ -11,49 +12,91 @@ if len(sys.argv) < 3:
     exit(1)
 
 ip = "localhost"
-port = sys.argv[1]
+port = int(sys.argv[1])
 id = sys.argv[2]
 
 print("Spawned worker {id} on port {p}".format(p=port, id=id))
+
+server_ip = "localhost"
+
+execution_pool = []
+
+execution_mutex = threading.Lock()
 
 # ===================================================
 # Create separate threads to listen and process tasks
 # ===================================================
 
-task_listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-task_listener.bind((ip, int(port)))
 
-task_listener.listen()
-while True:
-    sock, address = task_listener.accept()
+def master_listener():
+    '''
+    Listens to messages coming from master.
+    Master sends newly scheduled tasks.
+    '''
 
-    message = bytes()
+    master = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    master.bind((server_ip, port))
+    master.listen()
     while True:
-        data = sock.recv(1024)
-        if not data:
-            break
-        message += data
-    message = message.decode()
+        sock, address = master.accept()
+        print("Got connection from", address)
+        message = bytes()
 
-    message = json.loads(message)
-    print("Got", message["task"]["task_id"], "in worker", id)
+        while True:
+            data = sock.recv(1)
+            if not data:
+                break
+            message += data
 
-    response = dict()
-    response["job_id"] = message["job_id"]
-    response["task_id"] = message["task"]["task_id"]
-    response["task_type"] = message["task_type"]
-    response["worker_id"] = id
+        message = message.decode("utf-8")
 
-    # Open socket connection
-    master_ip = "localhost"
-    master_port = 5001
+        # Newly added tasks are added to the execution pool
+        task = json.loads(message)
+        execution_mutex.acquire()
+        execution_pool.append(task)
+        execution_mutex.release()
+
+
+def send_updates_to_master(task):
+    '''
+    Sends updates aboute completed tasks back to the master.
+    '''
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.connect((master_ip, master_port))
-        response = json.dumps(response)
+        s.connect((server_ip, 5001))
+        message = json.dumps(task)
+        s.send(message.encode())
 
-        # Send Task
-        s.send(response.encode())
 
-    # ===================================
-    # TODO: Add task to pool and process
-    # ===================================
+def worker():
+    '''
+    Simulates execution of tasks in the execution pool
+    '''
+
+    # Keeps on running waiting for any new tasks to be added to the execution pool
+    while True:
+        # infinite loop that waits for a task to be added to the execution pool
+        while len(execution_pool) == 0:
+            continue
+        
+        # Decrements the remaining duration by 1 for all tasks that have not been completed but are in the execution pool
+        # every 1 second
+        execution_mutex.acquire()
+        while len(execution_pool) != 0:
+            time.sleep(1)
+            for i in range(len(execution_pool)):
+                if execution_pool[i]["task"]["duration"] <= 0:
+                    completed_task = execution_pool.pop(i)
+                    send_updates_to_master(completed_task)
+                elif execution_pool[i]["task"]["duration"] > 0:
+                    execution_pool[i]["task"]["duration"] -= 1
+        execution_mutex.release()
+
+
+master_listner_thread = threading.Thread(target=master_listener)
+worker_thread = threading.Thread(target=worker)
+
+master_listner_thread.start()
+worker_thread.start()
+
+master_listner_thread.join()
+worker_thread.join()
