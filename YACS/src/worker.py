@@ -22,6 +22,7 @@ server_ip = "localhost"
 execution_pool = []
 
 execution_mutex = threading.Lock()
+has_tasks = threading.Semaphore(0)
 
 # ===================================================
 # Create separate threads to listen and process tasks
@@ -54,6 +55,7 @@ def master_listener():
         task = json.loads(message)
         execution_mutex.acquire()
         execution_pool.append(task)
+        has_tasks.release()
         execution_mutex.release()
 
 
@@ -72,23 +74,23 @@ def worker():
     Simulates execution of tasks in the execution pool
     '''
 
-    # Keeps on running waiting for any new tasks to be added to the execution pool
+    # Keeps on running waiting for any new tasks to be added to the execution pool.
     while True:
-        # infinite loop that waits for a task to be added to the execution pool
-        while len(execution_pool) == 0:
-            continue
-        
-        # Decrements the remaining duration by 1 for all tasks that have not been completed but are in the execution pool
-        # every 1 second
+
+        # Sleep 1 second irrespective of any tasks being in the execution pool.
+        time.sleep(1)
         execution_mutex.acquire()
-        while len(execution_pool) != 0:
-            time.sleep(1)
+
+        # If tasks exist, decrement duration for each.
+        if len(execution_pool) != 0:
             for i in range(len(execution_pool)):
-                if execution_pool[i]["task"]["duration"] <= 0:
+                if execution_pool[i]["task"]["duration"] > 0:
+                    execution_pool[i]["task"]["duration"] -= 1
+
+                # If duration is 0 (task completed), pop and send message to master.
+                if execution_pool[i]["task"]["duration"] == 0:
                     completed_task = execution_pool.pop(i)
                     send_updates_to_master(completed_task)
-                elif execution_pool[i]["task"]["duration"] > 0:
-                    execution_pool[i]["task"]["duration"] -= 1
         execution_mutex.release()
 
 

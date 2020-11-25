@@ -366,11 +366,12 @@ def worker_listener(n):
             for free_slots in loads:
                 if worker_id in loads[free_slots]:
                     loads[free_slots].remove(worker_id)
+                    break
 
-                    if free_slots+1 in loads:
-                        loads[free_slots+1].append(worker_id)
-                    else:
-                        loads[free_slots+1] = [worker_id]
+            if free_slots+1 in loads:
+                loads[free_slots+1].append(worker_id)
+            else:
+                loads[free_slots+1] = [worker_id]
 
             stats_mutex.release()
 
@@ -457,7 +458,7 @@ for worker in workers:
     # Create worker processes
     pid = os.fork()
     if pid == -1:
-        print("Faile to spawn worker {id}".format(id=worker_id))
+        print("Failed to spawn worker {id}".format(id=worker_id))
     elif pid == 0:
         os.execv("worker.py", args)
 
