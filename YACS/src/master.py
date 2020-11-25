@@ -452,11 +452,10 @@ def worker_listener(n):
                 schedule_job(job_id, sched_algo, "reduce")
             reduce_mutex.release()
         else:
+            remaining_reduce_tasks = 0
             task_mutex.acquire()
             if job_id in task_dependencies:
                 remaining_reduce_tasks = len(task_dependencies[job_id][task_type])
-            else:
-                remaining_reduce_tasks = 0
             task_mutex.release()
 
             if remaining_reduce_tasks == 0:
