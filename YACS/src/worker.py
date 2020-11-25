@@ -5,6 +5,8 @@ import json
 import time
 import socket
 import threading
+import datetime
+
 
 if len(sys.argv) < 3:
     print("ERROR: Not Enough Arguments")
@@ -22,6 +24,7 @@ server_ip = "localhost"
 execution_pool = []
 
 execution_mutex = threading.Lock()
+has_tasks = threading.Semaphore(0)
 
 # ===================================================
 # Create separate threads to listen and process tasks
@@ -53,6 +56,7 @@ def master_listener():
         task = json.loads(message)
         execution_mutex.acquire()
         execution_pool.append(task)
+        has_tasks.release()
         execution_mutex.release()
 
 
@@ -71,28 +75,28 @@ def worker():
     Simulates execution of tasks in the execution pool
     '''
 
-    # Keeps on running waiting for any new tasks to be added to the execution pool.
     while True:
-
-        # Sleep 1 second irrespective of any tasks being in the execution pool.
-        time.sleep(1)
+        # print(execution_pool)
+        has_tasks.acquire()
         execution_mutex.acquire()
 
-        # If tasks exist, decrement duration for each.
-        if len(execution_pool) != 0:
-            to_pop = []
-            for task in execution_pool:
-                if task["task"]["duration"] == 1:
-                    to_pop.append(task)
-                else:
-                    task["task"]["duration"] -= 1
+        to_pop = []
+        for task in execution_pool:
+            if task["task"]["duration"] == 1:
+                to_pop.append(task)
+            else:
+                task["task"]["duration"] -= 1
+        execution_mutex.release()
 
-                # If duration is 0 (task completed), pop and send message to master.
-                # if task["task"]["duration"] == 0:
-                #     # time.sleep(1)
-            for task in to_pop:
-                execution_pool.remove(task)
-                send_updates_to_master(task)
+        time.sleep(1)
+        has_tasks.release()
+
+        execution_mutex.acquire()
+        for task in to_pop:
+            has_tasks.acquire()
+            execution_pool.remove(task)
+            send_updates_to_master(task)
+
         execution_mutex.release()
 
 

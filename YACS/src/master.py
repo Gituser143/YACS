@@ -44,7 +44,9 @@ sched_algo = sched_algo.upper()
 
 # Logging
 log_file_path = "log_file_" + sched_algo + ".txt"
-os.remove(log_file_path)
+if os.path.exists(log_file_path):
+    os.remove(log_file_path)
+
 
 # Metatdata
 
