@@ -140,15 +140,6 @@ def send_job(worker_id, job_id, task, task_type):
     # Create message to send
     message = {"job_id": job_id, "task_type": task_type, "task": task, "worker_id": worker_id}
 
-    current_time = datetime.datetime.now()
-    log = "[" + str(current_time) + "]"
-    log += " Started task: " + task["task_id"]
-    log += " on worker: " + str(message["worker_id"])
-
-    log_file = open(log_file_path, "a+")
-
-    log_file.write(log + "\n")
-    log_file.close()
     printMessage("Task", "Scheduled task: " + task["task_id"] + " on worker: " + str(message["worker_id"]))
     # Open socket connection
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -387,6 +378,8 @@ def worker_listener(n):
         task_id = response["task_id"]
         task_type = response["task_type"]
         worker_id = response["worker_id"]
+        start = response["start"]
+        end = response["end"]
 
         task_mutex.acquire()
 
@@ -428,8 +421,16 @@ def worker_listener(n):
         # Increment empty slots
         has_empty_slots.release()
 
-        current_time = datetime.datetime.now()
-        log = "[" + str(current_time) + "]"
+        log = "[" + response["start"] + "]"
+        log += " Started task: " + task_id
+        log += " on worker: " + str(worker_id)
+
+        log_file = open(log_file_path, "a+")
+
+        log_file.write(log + "\n")
+        log_file.close()
+
+        log = "[" + response["end"] + "]"
         log += " Completed task: " + task_id
         log += " on worker: " + str(worker_id)
         log_file = open(log_file_path, "a+")

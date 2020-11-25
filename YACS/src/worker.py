@@ -5,7 +5,7 @@ import json
 import time
 import socket
 import threading
-
+import datetime
 
 if len(sys.argv) < 3:
     print("ERROR: Not Enough Arguments")
@@ -31,6 +31,7 @@ def decrement_duration(task):
     while task["task"]["duration"]:
         time.sleep(1)
         task["task"]["duration"] -= 1
+    task["end"] = datetime.datetime.now()
     send_updates_to_master(task)
 
 
@@ -57,6 +58,7 @@ def master_listener():
         message = message.decode()
 
         task = json.loads(message)
+        task["start"] = datetime.datetime.now()
 
         # Start each task on an individual threrad.
         execution_thread = threading.Thread(target=decrement_duration, args=(task,))
@@ -76,7 +78,8 @@ def send_updates_to_master(task):
         message["task_id"] = task["task"]["task_id"]
         message["task_type"] = task["task_type"]
         message["worker_id"] = task["worker_id"]
-
+        message["start"] = str(task["start"])
+        message["end"] = str(task["end"])
         s.connect((server_ip, 5001))
         message = json.dumps(message)
         s.send(message.encode())
