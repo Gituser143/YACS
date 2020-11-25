@@ -6,9 +6,32 @@ import threading
 import random
 import time
 
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+
+def printMessage(type, message):
+    if type == "LOG":
+        print(bcolors.OKGREEN + message + bcolors.ENDC)
+
+    elif type == "ERROR":
+        print(bcolors.FAIL + bcolors.BOLD + message + bcolors.ENDC + bcolors.ENDC)
+
+    else:
+        print(bcolors.OKCYAN + bcolors.BOLD + message + bcolors.ENDC + bcolors.ENDC)
+
+
 # Verifying command line arguments
 if len(sys.argv) < 3:
-    print("ERROR: Not Enough Arguments")
+    printMessage("ERROR", "ERROR: Not Enough Arguments")
     print("Usage:", sys.argv[0], "CONFIG.JSON SCHEDULING_ALGO")
     exit(1)
 
@@ -17,6 +40,9 @@ conf_path = "YACS/src/config.json"
 conf_path = sys.argv[1]
 sched_algo = sys.argv[2]
 sched_algo = sched_algo.upper()
+
+
+
 
 # Metatdata
 
@@ -103,7 +129,7 @@ def send_job(worker_id, job_id, task, task_type):
     # Create message to send
     message = {"job_id": job_id, "task_type": task_type, "task": task, "worker_id": worker_id}
 
-    print("Scheduled task:", message["task"]["task_id"], "on worker:", message["worker_id"])
+    printMessage("Task", "Scheduled task: " + message["task"]["task_id"] + " on worker:" + str(message["worker_id"]))
     # Open socket connection
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((worker_ip, worker_port))
@@ -279,7 +305,6 @@ def client_listener(n):
     client.listen(2)
     while True:
         sock, address = client.accept()
-        print("Got connection from", address)
         message = bytes()
         while True:
             data = sock.recv(1024)
@@ -341,7 +366,7 @@ def worker_listener(n):
 
         task_mutex.acquire()
 
-        print("Completed task: ", task_dependencies[job_id][task_type][task_id]["task_id"], "on worker: ", worker_id)
+        printMessage("Task", "Completed task: " + task_dependencies[job_id][task_type][task_id]["task_id"] + " on worker: " + str(worker_id))
         # Remove job from dependencies
         del task_dependencies[job_id][task_type][task_id]
 
@@ -386,6 +411,16 @@ def worker_listener(n):
 
             if remaining_map_tasks == 0:
                 schedule_job(job_id, sched_algo, "reduce")
+        else:
+            task_mutex.acquire()
+            remaining_reduce_tasks = len(task_dependencies[job_id][task_type])
+            task_mutex.release()
+
+            if remaining_reduce_tasks == 0:
+                printMessage("LOG", "Completed job: " + job_id)
+                task_mutex.acquire()
+                del task_dependencies[job_id]
+                task_mutex.release()
 
     # Initialise socket
     server_ip = "localhost"
@@ -429,6 +464,8 @@ def job_scheduler():
         job_id = job_queue.pop(0)
         queue_mutex.release()
 
+        printMessage("LOG", "Started job: " + job_id)
+
         # Schedule job
         schedule_job(job_id, sched_algo)
 
@@ -458,7 +495,7 @@ for worker in workers:
     # Create worker processes
     pid = os.fork()
     if pid == -1:
-        print("Failed to spawn worker {id}".format(id=worker_id))
+        printMessage("ERROR", "Failed to spawn worker {id}".format(id=worker_id))
     elif pid == 0:
         os.execv("worker.py", args)
 

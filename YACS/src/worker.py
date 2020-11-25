@@ -40,7 +40,6 @@ def master_listener():
     master.listen()
     while True:
         sock, address = master.accept()
-        print("Got connection from", address)
         message = bytes()
 
         while True:
@@ -49,7 +48,7 @@ def master_listener():
                 break
             message += data
 
-        message = message.decode("utf-8")
+        message = message.decode()
 
         # Newly added tasks are added to the execution pool
         task = json.loads(message)
@@ -83,14 +82,17 @@ def worker():
 
         # If tasks exist, decrement duration for each.
         if len(execution_pool) != 0:
-            for i in range(len(execution_pool)):
-                if execution_pool[i]["task"]["duration"] > 0:
-                    execution_pool[i]["task"]["duration"] -= 1
+            to_pop = []
+            for task in execution_pool:
+                if task["task"]["duration"] > 0:
+                    task["task"]["duration"] -= 1
 
                 # If duration is 0 (task completed), pop and send message to master.
-                if execution_pool[i]["task"]["duration"] == 0:
-                    completed_task = execution_pool.pop(i)
-                    send_updates_to_master(completed_task)
+                if task["task"]["duration"] == 0:
+                    to_pop.append(task)
+            for task in to_pop:
+                execution_pool.remove(task)
+                send_updates_to_master(task)
         execution_mutex.release()
 
 
