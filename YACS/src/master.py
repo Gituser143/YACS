@@ -101,8 +101,9 @@ def send_job(worker_id, job_id, task, task_type):
     worker_ip, worker_port = stats[worker_id][2]
 
     # Create message to send
-    message = {"job_id": job_id, "task_type": task_type, "task": task}
+    message = {"job_id": job_id, "task_type": task_type, "task": task, "worker_id": worker_id}
 
+    print("Scheduled task:", message["task"]["task_id"], "on worker:", message["worker_id"])
     # Open socket connection
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((worker_ip, worker_port))
@@ -146,7 +147,7 @@ def random_sched(job_id, task_type):
         stats[chosen_worker][1] -= 1
         stats_mutex.release()
 
-        send_job(chosen_worker, job_id, task, task_type)
+        send_job(chosen_worker, job_id, tasks[task], task_type)
 
 
 def round_robin_sched(job_id, task_type):
@@ -197,7 +198,7 @@ def round_robin_sched(job_id, task_type):
         queue_mutex.release()
 
         # Send job to worker
-        send_job(chosen_worker, job_id, task, task_type)
+        send_job(chosen_worker, job_id, tasks[task], task_type)
 
 
 def least_loaded_sched(job_id, task_type):
@@ -334,12 +335,13 @@ def worker_listener(n):
 
         # Extract data from response
         job_id = response["job_id"]
-        task_id = response["task_id"]
+        task_id = response["task"]["task_id"]
         task_type = response["task_type"]
         worker_id = response["worker_id"]
 
         task_mutex.acquire()
 
+        print("Completed task: ", task_dependencies[job_id][task_type][task_id]["task_id"], "on worker: ", worker_id)
         # Remove job from dependencies
         del task_dependencies[job_id][task_type][task_id]
 
@@ -364,11 +366,12 @@ def worker_listener(n):
             for free_slots in loads:
                 if worker_id in loads[free_slots]:
                     loads[free_slots].remove(worker_id)
+                    break
 
-                    if free_slots+1 in loads:
-                        loads[free_slots+1].append(worker_id)
-                    else:
-                        loads[free_slots+1] = [worker_id]
+            if free_slots+1 in loads:
+                loads[free_slots+1].append(worker_id)
+            else:
+                loads[free_slots+1] = [worker_id]
 
             stats_mutex.release()
 
@@ -455,7 +458,7 @@ for worker in workers:
     # Create worker processes
     pid = os.fork()
     if pid == -1:
-        print("Faile to spawn worker {id}".format(id=worker_id))
+        print("Failed to spawn worker {id}".format(id=worker_id))
     elif pid == 0:
         os.execv("worker.py", args)
 
