@@ -384,7 +384,7 @@ def worker_listener(n):
 
         # Extract data from response
         job_id = response["job_id"]
-        task_id = response["task"]["task_id"]
+        task_id = response["task_id"]
         task_type = response["task_type"]
         worker_id = response["worker_id"]
 

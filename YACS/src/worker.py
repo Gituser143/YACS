@@ -5,7 +5,6 @@ import json
 import time
 import socket
 import threading
-import queue
 
 
 if len(sys.argv) < 3:
@@ -13,27 +12,22 @@ if len(sys.argv) < 3:
     print("Usage:", sys.argv[0], "PORT WORKER_ID")
     exit(1)
 
-ip = "localhost"
+server_ip = "localhost"
 port = int(sys.argv[1])
 id = sys.argv[2]
 
 print("Spawned worker {id} on port {p}".format(p=port, id=id))
 
-server_ip = "localhost"
 
 execution_pool = []
 
-# execution_mutex = threading.Lock()
-# has_tasks = threading.Semaphore(0)
-
-# ===================================================
-# Create separate threads to listen and process tasks
-# ===================================================
-
 
 def decrement_duration(task):
-
-    print(task)
+    '''
+    Run each task. Sleep in intervals of 1 second
+    for given task duration. On finishing task,
+    update master.
+    '''
     while task["task"]["duration"]:
         time.sleep(1)
         task["task"]["duration"] -= 1
@@ -46,6 +40,7 @@ def master_listener():
     Master sends newly scheduled tasks.
     '''
 
+    # Listen for tasks from master
     master = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     master.bind((server_ip, port))
     master.listen()
@@ -54,27 +49,36 @@ def master_listener():
         message = bytes()
 
         while True:
-            data = sock.recv(1)
+            data = sock.recv(1024)
             if not data:
                 break
             message += data
 
         message = message.decode()
 
-        # Newly added tasks are added to the execution pool
         task = json.loads(message)
+
+        # Start each task on an individual threrad.
         execution_thread = threading.Thread(target=decrement_duration, args=(task,))
         execution_thread.start()
+
+        # Add thread to execution_pool
         execution_pool.append(execution_thread)
 
 
 def send_updates_to_master(task):
     '''
-    Sends updates aboute completed tasks back to the master.
+    Sends updates about completed tasks back to the master.
     '''
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        message = dict()
+        message["job_id"] = task["job_id"]
+        message["task_id"] = task["task"]["task_id"]
+        message["task_type"] = task["task_type"]
+        message["worker_id"] = task["worker_id"]
+
         s.connect((server_ip, 5001))
-        message = json.dumps(task)
+        message = json.dumps(message)
         s.send(message.encode())
 
 
@@ -85,6 +89,8 @@ def worker():
     while True:
         for exec_thread in execution_pool:
             exec_thread.join()
+
+        execution_pool.clear()
 
 
 master_listner_thread = threading.Thread(target=master_listener)
