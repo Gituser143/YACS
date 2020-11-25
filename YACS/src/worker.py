@@ -22,7 +22,6 @@ server_ip = "localhost"
 execution_pool = []
 
 execution_mutex = threading.Lock()
-has_tasks = threading.Semaphore(0)
 
 # ===================================================
 # Create separate threads to listen and process tasks
@@ -54,7 +53,6 @@ def master_listener():
         task = json.loads(message)
         execution_mutex.acquire()
         execution_pool.append(task)
-        has_tasks.release()
         execution_mutex.release()
 
 
