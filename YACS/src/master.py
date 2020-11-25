@@ -421,7 +421,7 @@ def worker_listener(n):
         # Increment empty slots
         has_empty_slots.release()
 
-        log = "[" + response["start"] + "]"
+        log = "[" + start + "]"
         log += " Started task: " + task_id
         log += " on worker: " + str(worker_id)
 
@@ -430,7 +430,7 @@ def worker_listener(n):
         log_file.write(log + "\n")
         log_file.close()
 
-        log = "[" + response["end"] + "]"
+        log = "[" + end + "]"
         log += " Completed task: " + task_id
         log += " on worker: " + str(worker_id)
         log_file = open(log_file_path, "a+")
