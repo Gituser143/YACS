@@ -84,12 +84,14 @@ def worker():
         if len(execution_pool) != 0:
             to_pop = []
             for task in execution_pool:
-                if task["task"]["duration"] > 0:
+                if task["task"]["duration"] == 1:
+                    to_pop.append(task)
+                else:
                     task["task"]["duration"] -= 1
 
                 # If duration is 0 (task completed), pop and send message to master.
-                if task["task"]["duration"] == 0:
-                    to_pop.append(task)
+                # if task["task"]["duration"] == 0:
+                #     # time.sleep(1)
             for task in to_pop:
                 execution_pool.remove(task)
                 send_updates_to_master(task)

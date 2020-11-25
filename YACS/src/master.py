@@ -4,7 +4,8 @@ import json
 import socket
 import threading
 import random
-import time
+import datetime
+
 
 class bcolors:
     HEADER = '\033[95m'
@@ -41,8 +42,9 @@ conf_path = sys.argv[1]
 sched_algo = sys.argv[2]
 sched_algo = sched_algo.upper()
 
-
-
+# Logging
+log_file_path = "log_file_" + sched_algo + ".txt"
+os.remove(log_file_path)
 
 # Metatdata
 
@@ -64,6 +66,12 @@ task_dependencies = dict()
 Holds job IDs in queue for scheduling
 '''
 job_queue = []
+
+
+'''
+Holds information of whether or not reduce tasks have been scheduled.
+'''
+is_scheduled = dict()
 
 # variables used for Round Robin
 
@@ -92,6 +100,7 @@ loads = dict()
 task_mutex = threading.Lock()
 stats_mutex = threading.Lock()
 queue_mutex = threading.Lock()
+reduce_mutex = threading.Lock()
 
 
 def init_meta(stats, sched_algo):
@@ -129,7 +138,16 @@ def send_job(worker_id, job_id, task, task_type):
     # Create message to send
     message = {"job_id": job_id, "task_type": task_type, "task": task, "worker_id": worker_id}
 
-    printMessage("Task", "Scheduled task: " + message["task"]["task_id"] + " on worker:" + str(message["worker_id"]))
+    current_time = datetime.datetime.now()
+    log = "[" + str(current_time) + "]"
+    log += " Started task: " + task["task_id"]
+    log += " on worker: " + str(message["worker_id"])
+
+    log_file = open(log_file_path, "a+")
+
+    log_file.write(log + "\n")
+    log_file.close()
+    printMessage("Task", "Scheduled task: " + task["task_id"] + " on worker: " + str(message["worker_id"]))
     # Open socket connection
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((worker_ip, worker_port))
@@ -323,6 +341,10 @@ def client_listener(n):
         map_dict = {task["task_id"]: task for task in map_tasks}
         reduce_dict = {task["task_id"]: task for task in reduce_tasks}
 
+        reduce_mutex.acquire()
+        is_scheduled[job_id] = False
+        reduce_mutex.release()
+
         # Add job to list of task dependencies
         task_mutex.acquire()
         task_dependencies[job_id] = {"map": map_dict, "reduce": reduce_dict}
@@ -366,7 +388,8 @@ def worker_listener(n):
 
         task_mutex.acquire()
 
-        printMessage("Task", "Completed task: " + task_dependencies[job_id][task_type][task_id]["task_id"] + " on worker: " + str(worker_id))
+        printMessage("Task", "Completed task: " + task_id + " on worker: " + str(worker_id))
+
         # Remove job from dependencies
         del task_dependencies[job_id][task_type][task_id]
 
@@ -403,23 +426,46 @@ def worker_listener(n):
         # Increment empty slots
         has_empty_slots.release()
 
+        current_time = datetime.datetime.now()
+        log = "[" + str(current_time) + "]"
+        log += " Completed task: " + task_id
+        log += " on worker: " + str(worker_id)
+        log_file = open(log_file_path, "a+")
+
+        log_file.write(log + "\n")
+        log_file.close()
+
         # If no more map tasks exist, schedule reduce tasks
         if task_type == "map":
             task_mutex.acquire()
             remaining_map_tasks = len(task_dependencies[job_id][task_type])
             task_mutex.release()
 
-            if remaining_map_tasks == 0:
+            reduce_mutex.acquire()
+            to_schedule = is_scheduled[job_id]
+
+            if remaining_map_tasks == 0 and not to_schedule:
+                is_scheduled[job_id] = True
                 schedule_job(job_id, sched_algo, "reduce")
+            reduce_mutex.release()
         else:
             task_mutex.acquire()
             remaining_reduce_tasks = len(task_dependencies[job_id][task_type])
             task_mutex.release()
 
             if remaining_reduce_tasks == 0:
-                printMessage("LOG", "Completed job: " + job_id)
+
                 task_mutex.acquire()
-                del task_dependencies[job_id]
+                if job_id in task_dependencies:
+                    current_time = datetime.datetime.now()
+                    log = "[" + str(current_time) + "]"
+                    log += " Completed job: " + job_id
+                    log_file = open(log_file_path, "a+")
+
+                    log_file.write(log + "\n")
+                    log_file.close()
+                    printMessage("LOG", "Completed job: " + job_id)
+                    del task_dependencies[job_id]
                 task_mutex.release()
 
     # Initialise socket
@@ -464,6 +510,13 @@ def job_scheduler():
         job_id = job_queue.pop(0)
         queue_mutex.release()
 
+        current_time = datetime.datetime.now()
+        log = "[" + str(current_time) + "]"
+        log += " Started job: " + job_id
+        log_file = open(log_file_path, "a+")
+
+        log_file.write(log + "\n")
+        log_file.close()
         printMessage("LOG", "Started job: " + job_id)
 
         # Schedule job
