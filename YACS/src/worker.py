@@ -5,7 +5,7 @@ import json
 import time
 import socket
 import threading
-import datetime
+import queue
 
 
 if len(sys.argv) < 3:
@@ -23,12 +23,21 @@ server_ip = "localhost"
 
 execution_pool = []
 
-execution_mutex = threading.Lock()
-has_tasks = threading.Semaphore(0)
+# execution_mutex = threading.Lock()
+# has_tasks = threading.Semaphore(0)
 
 # ===================================================
 # Create separate threads to listen and process tasks
 # ===================================================
+
+
+def decrement_duration(task):
+
+    print(task)
+    while task["task"]["duration"]:
+        time.sleep(1)
+        task["task"]["duration"] -= 1
+    send_updates_to_master(task)
 
 
 def master_listener():
@@ -54,10 +63,9 @@ def master_listener():
 
         # Newly added tasks are added to the execution pool
         task = json.loads(message)
-        execution_mutex.acquire()
-        execution_pool.append(task)
-        has_tasks.release()
-        execution_mutex.release()
+        execution_thread = threading.Thread(target=decrement_duration, args=(task,))
+        execution_thread.start()
+        execution_pool.append(execution_thread)
 
 
 def send_updates_to_master(task):
@@ -74,30 +82,9 @@ def worker():
     '''
     Simulates execution of tasks in the execution pool
     '''
-
     while True:
-        # print(execution_pool)
-        has_tasks.acquire()
-        execution_mutex.acquire()
-
-        to_pop = []
-        for task in execution_pool:
-            if task["task"]["duration"] == 1:
-                to_pop.append(task)
-            else:
-                task["task"]["duration"] -= 1
-        execution_mutex.release()
-
-        time.sleep(1)
-        has_tasks.release()
-
-        execution_mutex.acquire()
-        for task in to_pop:
-            has_tasks.acquire()
-            execution_pool.remove(task)
-            send_updates_to_master(task)
-
-        execution_mutex.release()
+        for exec_thread in execution_pool:
+            exec_thread.join()
 
 
 master_listner_thread = threading.Thread(target=master_listener)
