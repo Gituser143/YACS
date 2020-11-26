@@ -43,7 +43,7 @@ sched_algo = sys.argv[2]
 sched_algo = sched_algo.upper()
 
 # Logging
-log_file_path = "log_file_" + sched_algo + ".txt"
+log_file_path = "master.log"
 if os.path.exists(log_file_path):
     os.remove(log_file_path)
 
@@ -105,6 +105,16 @@ queue_mutex = threading.Lock()
 reduce_mutex = threading.Lock()
 
 
+def log_message(message):
+    current_time = datetime.datetime.now()
+    log = "[" + str(current_time) + "]"
+    log += " " + message
+    log_file = open(log_file_path, "a+")
+
+    log_file.write(log + "\n")
+    log_file.close()
+
+
 def init_meta(stats, sched_algo):
     '''
     Function to Initialise metatda. Takes in the
@@ -141,6 +151,9 @@ def send_job(worker_id, job_id, task, task_type):
     message = {"job_id": job_id, "task_type": task_type, "task": task, "worker_id": worker_id}
 
     printMessage("Task", "Scheduled task: " + task["task_id"] + " on worker: " + str(message["worker_id"]))
+
+    log_message("Scheduled task: " + task["task_id"] + " on worker: " + str(message["worker_id"]))
+
     # Open socket connection
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.connect((worker_ip, worker_port))
@@ -331,6 +344,8 @@ def client_listener(n):
         map_tasks = job_data["map_tasks"]
         reduce_tasks = job_data["reduce_tasks"]
 
+        log_message("Job arrived: " + job_id)
+
         map_dict = {task["task_id"]: task for task in map_tasks}
         reduce_dict = {task["task_id"]: task for task in reduce_tasks}
 
@@ -378,10 +393,10 @@ def worker_listener(n):
         task_id = response["task_id"]
         task_type = response["task_type"]
         worker_id = response["worker_id"]
-        start = response["start"]
-        end = response["end"]
 
         task_mutex.acquire()
+
+        log_message("Completed task: " + task_id)
 
         printMessage("Task", "Completed task: " + task_id + " on worker: " + str(worker_id))
 
@@ -421,23 +436,6 @@ def worker_listener(n):
         # Increment empty slots
         has_empty_slots.release()
 
-        log = "[" + start + "]"
-        log += " Started task: " + task_id
-        log += " on worker: " + str(worker_id)
-
-        log_file = open(log_file_path, "a+")
-
-        log_file.write(log + "\n")
-        log_file.close()
-
-        log = "[" + end + "]"
-        log += " Completed task: " + task_id
-        log += " on worker: " + str(worker_id)
-        log_file = open(log_file_path, "a+")
-
-        log_file.write(log + "\n")
-        log_file.close()
-
         # If no more map tasks exist, schedule reduce tasks
         if task_type == "map":
             task_mutex.acquire()
@@ -462,13 +460,8 @@ def worker_listener(n):
 
                 task_mutex.acquire()
                 if job_id in task_dependencies:
-                    current_time = datetime.datetime.now()
-                    log = "[" + str(current_time) + "]"
-                    log += " Completed job: " + job_id
-                    log_file = open(log_file_path, "a+")
+                    log_message("Completed job: " + job_id)
 
-                    log_file.write(log + "\n")
-                    log_file.close()
                     printMessage("LOG", "Completed job: " + job_id)
                     del task_dependencies[job_id]
                 task_mutex.release()
@@ -515,13 +508,6 @@ def job_scheduler():
         job_id = job_queue.pop(0)
         queue_mutex.release()
 
-        current_time = datetime.datetime.now()
-        log = "[" + str(current_time) + "]"
-        log += " Started job: " + job_id
-        log_file = open(log_file_path, "a+")
-
-        log_file.write(log + "\n")
-        log_file.close()
         printMessage("LOG", "Started job: " + job_id)
 
         # Schedule job

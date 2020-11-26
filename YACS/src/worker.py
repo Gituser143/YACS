@@ -18,6 +18,18 @@ id = sys.argv[2]
 
 print("Spawned worker {id} on port {p}".format(p=port, id=id))
 
+log_file_path = "worker_" + id + ".log"
+
+
+def log_message(message):
+    current_time = datetime.datetime.now()
+    log = "[" + str(current_time) + "]"
+    log += " " + message
+    log_file = open(log_file_path, "a+")
+
+    log_file.write(log + "\n")
+    log_file.close()
+
 
 execution_pool = []
 
@@ -31,7 +43,7 @@ def decrement_duration(task):
     while task["task"]["duration"]:
         time.sleep(1)
         task["task"]["duration"] -= 1
-    task["end"] = datetime.datetime.now()
+    log_message("Completed Task: " + task["task"]["task_id"])
     send_updates_to_master(task)
 
 
@@ -58,7 +70,8 @@ def master_listener():
         message = message.decode()
 
         task = json.loads(message)
-        task["start"] = datetime.datetime.now()
+
+        log_message("Task arrived: " + task["task"]["task_id"])
 
         # Start each task on an individual threrad.
         execution_thread = threading.Thread(target=decrement_duration, args=(task,))
@@ -78,8 +91,6 @@ def send_updates_to_master(task):
         message["task_id"] = task["task"]["task_id"]
         message["task_type"] = task["task_type"]
         message["worker_id"] = task["worker_id"]
-        message["start"] = str(task["start"])
-        message["end"] = str(task["end"])
         s.connect((server_ip, 5001))
         message = json.dumps(message)
         s.send(message.encode())
