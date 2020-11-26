@@ -7,14 +7,14 @@ import numpy as np
 
 
 def create_job_request(job_id):
-    number_of_map_tasks = 4
-    number_of_reduce_tasks = 2
+    number_of_map_tasks = random.randrange(1, 5)
+    number_of_reduce_tasks = random.randrange(1, 3)
     job_request = {"job_id": job_id, "map_tasks": [], "reduce_tasks": []}
     for i in range(0, number_of_map_tasks):
-        map_task = {"task_id": job_id+"_M"+str(i), "duration": 4}
+        map_task = {"task_id": job_id+"_M"+str(i), "duration": random.randrange(1, 5)}
         job_request["map_tasks"].append(map_task)
     for i in range(0, number_of_reduce_tasks):
-        reduce_task = {"task_id": job_id+"_R"+str(i), "duration": 3}
+        reduce_task = {"task_id": job_id+"_R"+str(i), "duration": random.randrange(1, 5)}
         job_request["reduce_tasks"].append(reduce_task)
     return job_request
 
@@ -34,8 +34,7 @@ if __name__ == '__main__':
 
     # get number of requests to be generated
     number_of_requests = int(sys.argv[1])
-    # arrivals = np.random.exponential(1, size=number_of_requests-1)
-    arrivals = [1 for i in range(1, number_of_requests)]
+    arrivals = np.random.exponential(1, size=number_of_requests-1)
     request_number = 0
     # send first request
     current_time = last_request_time = time.time()  # time 0

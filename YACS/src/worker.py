@@ -80,7 +80,7 @@ def master_listener():
 
         task = json.loads(message)
 
-        log_message("Task Arrived: " + task["task"]["task_id"])
+        log_message("Task arrived: " + task["task"]["task_id"])
 
         # Start each task on an individual threrad.
         execution_thread = threading.Thread(target=decrement_duration, args=(task,))
