@@ -48,6 +48,20 @@ if os.path.exists(log_file_path):
     os.remove(log_file_path)
 
 
+def log_message(message):
+    '''
+    Function which logs given message by adding
+    a timestamp and writing to specified log file.
+    '''
+    current_time = datetime.datetime.now()
+    log = "[" + str(current_time) + "]"
+    log += " " + message
+    log_file = open(log_file_path, "a+")
+
+    log_file.write(log + "\n")
+    log_file.close()
+
+
 # Metatdata
 
 '''
@@ -103,16 +117,6 @@ task_mutex = threading.Lock()
 stats_mutex = threading.Lock()
 queue_mutex = threading.Lock()
 reduce_mutex = threading.Lock()
-
-
-def log_message(message):
-    current_time = datetime.datetime.now()
-    log = "[" + str(current_time) + "]"
-    log += " " + message
-    log_file = open(log_file_path, "a+")
-
-    log_file.write(log + "\n")
-    log_file.close()
 
 
 def init_meta(stats, sched_algo):

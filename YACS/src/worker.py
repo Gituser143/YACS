@@ -6,6 +6,7 @@ import time
 import socket
 import threading
 import datetime
+import os
 
 if len(sys.argv) < 3:
     print("ERROR: Not Enough Arguments")
@@ -16,12 +17,17 @@ server_ip = "localhost"
 port = int(sys.argv[1])
 id = sys.argv[2]
 
-print("Spawned worker {id} on port {p}".format(p=port, id=id))
-
+# Logging
 log_file_path = "worker_" + id + ".log"
+if os.path.exists(log_file_path):
+    os.remove(log_file_path)
 
 
 def log_message(message):
+    '''
+    Function which logs given message by adding
+    a timestamp and writing to specified log file.
+    '''
     current_time = datetime.datetime.now()
     log = "[" + str(current_time) + "]"
     log += " " + message
@@ -29,6 +35,9 @@ def log_message(message):
 
     log_file.write(log + "\n")
     log_file.close()
+
+
+print("Spawned worker {id} on port {p}".format(p=port, id=id))
 
 
 execution_pool = []
@@ -43,7 +52,7 @@ def decrement_duration(task):
     while task["task"]["duration"]:
         time.sleep(1)
         task["task"]["duration"] -= 1
-    log_message("Completed Task: " + task["task"]["task_id"])
+    log_message("Completed task: " + task["task"]["task_id"])
     send_updates_to_master(task)
 
 
@@ -71,7 +80,7 @@ def master_listener():
 
         task = json.loads(message)
 
-        log_message("Task arrived: " + task["task"]["task_id"])
+        log_message("Task Arrived: " + task["task"]["task_id"])
 
         # Start each task on an individual threrad.
         execution_thread = threading.Thread(target=decrement_duration, args=(task,))
