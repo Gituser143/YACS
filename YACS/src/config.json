@@ -3,12 +3,14 @@
     {
       "worker_id": 1,
       "slots": 5,
-      "port": 4000
+      "port": 4000,
+      "ip": "127.0.0.1"
     },
     {
       "worker_id": 2,
       "slots": 7,
-      "port": 4001
+      "port": 4001,
+      "ip": "localhost"
     },
     {
       "worker_id": 3,

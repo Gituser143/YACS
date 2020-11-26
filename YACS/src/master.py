@@ -533,8 +533,14 @@ for worker in workers:
     slots = worker["slots"]
     port = worker["port"]
 
+    ip = ""
+    if "ip" in worker:
+        ip = worker["ip"]
+    else:
+        ip = "localhost"
+
     # Insert meta
-    stats[worker_id] = [slots, slots, ["localhost", port]]
+    stats[worker_id] = [slots, slots, [ip, port]]
     total_slots += slots
 
     # Command line args meant for worker.py
