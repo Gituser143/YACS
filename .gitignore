@@ -6,3 +6,4 @@ adj_list
 adjlist
 *.csv
 *.log
+*.ipynb
