@@ -67,7 +67,7 @@ def master_listener():
     master.bind((server_ip, port))
     master.listen()
     while True:
-        sock, address = master.accept()
+        sock, _ = master.accept()
         message = bytes()
 
         while True:

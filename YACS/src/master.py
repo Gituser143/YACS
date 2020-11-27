@@ -332,7 +332,7 @@ def client_listener(n):
     # Listen for incoming requests from clients
     client.listen(2)
     while True:
-        sock, address = client.accept()
+        sock, _ = client.accept()
         message = bytes()
         while True:
             data = sock.recv(1024)
@@ -485,7 +485,7 @@ def worker_listener(n):
     # Listen for incoming requests from workers
     while True:
         worker.listen(n)
-        sock, address = worker.accept()
+        sock, _ = worker.accept()
 
         new_thread = threading.Thread(target=worker_connection, args=(sock,))
 
