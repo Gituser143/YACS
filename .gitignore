@@ -7,3 +7,4 @@ adjlist
 *.csv
 *.log
 *.ipynb
+logs

@@ -4,16 +4,12 @@
 # In[1]:
 
 
+import json
+import re
+import datetime
 import matplotlib.pyplot as plt
 import pandas as pd
-import csv
-import seaborn as sns
 plt.style.use('fivethirtyeight')
-import numpy as np
-import datetime
-import re
-import time
-import json
 
 
 # In[2]:
@@ -72,11 +68,11 @@ task_ending_pattern = r"\[(.*)\] Completed task: (.*)"
 def duration(start, end):
     start = datetime.datetime.strptime(start, "%Y-%m-%d %H:%M:%S.%f")
     end = datetime.datetime.strptime(end, "%Y-%m-%d %H:%M:%S.%f")
-    
+
     duration = end - start
-    
+
     elapsed = float((duration.days * 86400) + (duration.seconds * 1) + float(duration.microseconds / 1000) / 1000)
-    
+
     return elapsed
 
 
@@ -111,7 +107,7 @@ def compute_stats(lines, arrival_pattern, ending_pattern):
     times = pd.DataFrame(times.values(), columns=["durations"])
     mean = times["durations"].mean()
     median = times["durations"].median()
-    
+
     return mean, median
 
 
@@ -128,8 +124,8 @@ print(job_mean, job_median)
 lines = []
 
 for worker_log in worker_logs:
-      with open(worker_log, "r") as f:
-            lines += f.readlines()
+    with open(worker_log, "r") as f:
+        lines += f.readlines()
 
 
 # In[11]:
@@ -184,10 +180,10 @@ def plot_scatter(lines, task_arrival_pattern, task_ending_pattern, base, worker_
     x, y = get_plot_vals(lines, task_arrival_pattern, task_ending_pattern, base)
     plt.figure(figsize=(15, 10))
     title = "Algorithm: " + algos[algo_idx] + ": Number of tasks running on worker " + worker_id + " against time."
-    plt.figtext(.5,.9,title, fontsize=25, ha='center')
-    plt.rc('xtick', labelsize=20)    
+    plt.figtext(.5, .9, title, fontsize=25, ha='center')
+    plt.rc('xtick', labelsize=20)
     plt.rc('ytick', labelsize=20)
-    plt.scatter(x, y, color = (0.5,0.1,0.5,0.6))
+    plt.scatter(x, y, color=(0.5, 0.1, 0.5, 0.6))
     plt.xlabel("Time in seconds", fontsize=20)
     plt.ylabel("Number of tasks", fontsize=20)
     file_name = "scatter" + algos[algo_idx] + "worker" + worker_id + ".png"
@@ -201,8 +197,8 @@ def plot_line(lines, task_arrival_pattern, task_ending_pattern, base, worker_id)
     x, y = get_plot_vals(lines, task_arrival_pattern, task_ending_pattern, base)
     plt.figure(figsize=(15, 10))
     title = "Algorithm: " + algos[algo_idx] + ": Number of tasks running on worker " + worker_id + " against time."
-    plt.figtext(.5,.9,title, fontsize=25, ha='center')
-    plt.rc('xtick', labelsize=20)    
+    plt.figtext(.5, .9, title, fontsize=25, ha='center')
+    plt.rc('xtick', labelsize=20)
     plt.rc('ytick', labelsize=20)
     plt.plot(x, y, 'b')
     plt.xlabel("Time in seconds", fontsize=20)
@@ -221,8 +217,8 @@ def plot_bar(lines, task_arrival_pattern, task_ending_pattern, base, worker_id):
 
     plt.figure(figsize=(15, 10))
     title = "Algorithm: " + algos[algo_idx] + ": Number of tasks running on worker " + worker_id + " against event logs."
-    plt.figtext(.5,.9,title, fontsize=25, ha='center')
-    plt.rc('xtick', labelsize=20)    
+    plt.figtext(.5, .9, title, fontsize=25, ha='center')
+    plt.rc('xtick', labelsize=20)
     plt.rc('ytick', labelsize=20)
     plt.bar(x_bar, y_bar)
     plt.xlabel("Series of events", fontsize=20)
@@ -268,7 +264,3 @@ for worker_log in worker_logs:
 
 
 # In[ ]:
-
-
-
-
