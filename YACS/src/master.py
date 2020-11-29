@@ -5,6 +5,7 @@ import socket
 import threading
 import random
 import datetime
+import signal
 
 
 class bcolors:
@@ -527,6 +528,9 @@ workers = json_data["workers"]
 
 total_slots = 0
 
+# Store worker PIDs
+worker_pids = []
+
 # Parse workers
 for worker in workers:
     worker_id = worker["worker_id"]
@@ -552,27 +556,35 @@ for worker in workers:
         printMessage("ERROR", "Failed to spawn worker {id}".format(id=worker_id))
     elif pid == 0:
         os.execv("worker.py", args)
+    else:
+        worker_pids.append(pid)
 
-# Initialise metatdata
-has_empty_slots = threading.Semaphore(total_slots)
-has_jobs = threading.Semaphore(0)
-init_meta(stats, sched_algo)
+try:
+    # Initialise metatdata
+    has_empty_slots = threading.Semaphore(total_slots)
+    has_jobs = threading.Semaphore(0)
+    init_meta(stats, sched_algo)
 
-n = len(workers)
-print("Spawned {n} workers".format(n=n))
+    n = len(workers)
+    print("Spawned {n} workers".format(n=n))
 
+    # Create threads to listen for clients and workers
+    client_thread = threading.Thread(target=client_listener, args=(n,))
+    worker_thread = threading.Thread(target=worker_listener, args=(n,))
+    scheduler_thread = threading.Thread(target=job_scheduler)
 
-# Create threads to listen for clients and workers
-client_thread = threading.Thread(target=client_listener, args=(n,))
-worker_thread = threading.Thread(target=worker_listener, args=(n,))
-scheduler_thread = threading.Thread(target=job_scheduler)
+    # Start threads
+    client_thread.start()
+    worker_thread.start()
+    scheduler_thread.start()
 
-# Start threads
-client_thread.start()
-worker_thread.start()
-scheduler_thread.start()
+    # Wait for threads to finish
+    client_thread.join()
+    worker_thread.join()
+    scheduler_thread.join()
 
-# Wait for threads to finish
-client_thread.join()
-worker_thread.join()
-scheduler_thread.join()
+except KeyboardInterrupt:
+    for pid in worker_pids:
+        os.kill(pid, signal.SIGKILL)
+    printMessage("ERROR", "Received KeyboardInterrupt. Killed all workers, terminating master")
+    os.kill(os.getpid(), signal.SIGKILL)
