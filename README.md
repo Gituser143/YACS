@@ -7,18 +7,18 @@ For this project, all the processes, i.e., master and worker processes run on th
 
 Table of contents
 =================
-- [ About ](#YACS)
-- [ Execution Details ](#Execution-on-a-local-machine)
-- [ Architecture Used ](#Architecture)
-	- [ Master ](#Master)
-	- [ Worker ](#Worker)
-- [ Scheduler Details ](#Schedulers)
-	- [ Least Loaded Scheduler ](#Least-Loaded-Scheduler)
-	- [ Round Robin Scheduler ](#Round-Robin-Scheduler)
-	- [ Random Scheduler ](#Random-Scheduler)
-- [ Custom Configurations ](#Custom-Configurations)
-- [ Sending job requests ](#sending-job-requests)
- 
+
+-	[ About ](#YACS)
+-	[ Execution Details ](#Execution-on-a-local-machine)
+-	[ Architecture Used ](#Architecture)
+	-	[ Master ](#Master)
+	-	[ Worker ](#Worker)
+-	[ Scheduler Details ](#Schedulers)
+	-	[ Least Loaded Scheduler ](#Least-Loaded-Scheduler)
+	-	[ Round Robin Scheduler ](#Round-Robin-Scheduler)
+	-	[ Random Scheduler ](#Random-Scheduler)
+-	[ Custom Configurations ](#Custom-Configurations)
+-	[ Sending job requests ](#sending-job-requests)
 
 Execution on a local machine
 ============================
