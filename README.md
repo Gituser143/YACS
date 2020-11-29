@@ -5,6 +5,21 @@ Yet Another Centralized Scheduler (YACS) is a scheduling framework that can sche
 
 For this project, all the processes, i.e., master and worker processes run on the same machine. This behaves as a simulation of the working of YACS. It can also be used in a real distributed environment by providing each worker machine’s IP address in the configuration file.
 
+Table of contents
+=================
+- [ About ](#YACS)
+- [ Execution Details ](#Execution-on-a-local-machine)
+- [ Architecture Used ](#Architecture)
+	- [ Master ](#Master)
+	- [ Worker ](#Worker)
+- [ Scheduler Details ](#Schedulers)
+	- [ Least Loaded Scheduler ](#Least-Loaded-Scheduler)
+	- [ Round Robin Scheduler ](#Round-Robin-Scheduler)
+	- [ Random Scheduler ](#Random-Scheduler)
+- [ Custom Configurations ](#Custom-Configurations)
+- [ Sending job requests ](#sending-job-requests)
+ 
+
 Execution on a local machine
 ============================
 
