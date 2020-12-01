@@ -241,10 +241,10 @@ def plot_grouped_bar(labels,means,medians,flag) :
     rects1 = ax.bar(x - width/2, means, width, label='mean')
     rects2 = ax.bar(x + width/2, medians, width, label='median')
 
-    ax.set_ylabel('Mean/Median')
-    ax.set_title(name + ' Mean/Medians by scheduling algorithms')
+    ax.set_ylabel('Mean/Median',fontsize = 20)
+    ax.set_title(name + ' Mean/Medians by scheduling algorithms',fontsize =25)
     ax.set_xticks(x)
-    ax.set_xticklabels(labels)
+    ax.set_xticklabels(labels,fontsize = 20)
     ax.legend()
 
     def autolabel(rects):
