@@ -230,21 +230,23 @@ def plot_bar(lines, task_arrival_pattern, task_ending_pattern, base, worker_id):
 
 # In[17]:
 
-def plot_grouped_bar(labels,means,medians,flag) : 
+def plot_grouped_bar(labels,j_means,j_medians,t_means,t_medians) : 
     #flag = 0 for job, 1 for task
-    names = ["Job","Task"]
-    name = names[flag] 
+    # names = ["Job","Task"]
+    # name = names[flag] 
     x = np.arange(len(labels))
-    width = 0.35
+    width = 0.18
     fig,ax = plt.subplots(figsize = (15,10))
     
-    rects1 = ax.bar(x - width/2, means, width, label='mean')
-    rects2 = ax.bar(x + width/2, medians, width, label='median')
+    rects1 = ax.bar(x - width, j_means, width, label='job mean')
+    rects2 = ax.bar(x, j_medians, width, label='job median')
+    rects3 = ax.bar(x+width, t_means, width, label='task mean')
+    rects4 = ax.bar(x + 2*width, t_medians, width, label='task median')
 
     ax.set_ylabel('Mean/Median',fontsize = 20)
-    ax.set_title(name + ' Mean/Medians by scheduling algorithms',fontsize =25)
+    ax.set_title(' Mean/Medians by scheduling algorithms',fontsize =25)
     ax.set_xticks(x)
-    ax.set_xticklabels(labels,fontsize = 20)
+    ax.set_xticklabels(labels,fontsize = 20,fontdict = {'horizontalalignment': 'center'})
     ax.legend()
 
     def autolabel(rects):
@@ -254,12 +256,15 @@ def plot_grouped_bar(labels,means,medians,flag) :
                         xy=(rect.get_x() + rect.get_width() / 2, height),
                         xytext=(0, 3),  # 3 points vertical offset
                         textcoords="offset points",
-                        ha='center', va='bottom')
+                        ha='center', va='bottom',fontsize = 20)
 
     autolabel(rects1)
     autolabel(rects2)
+    autolabel(rects3)
+    autolabel(rects4)
+
     fig.tight_layout()
-    figname = name + "_groupby_mean_median_bar.png"
+    figname = "groupby_mean_median_bar.png"
     plt.savefig(figname)
 
 def groupby_mean_median_plot() : 
@@ -290,14 +295,14 @@ def groupby_mean_median_plot() :
 
     #for jobs
     labels = ['RR','RANDOM','LL']
-    means = [round(job_vals[i][0],2) for i in range(0,3)]
-    medians = [round(job_vals[i][1],2) for i in range(0,3)]
-    plot_grouped_bar(labels,means,medians,0)
+    j_means = [round(job_vals[i][0],2) for i in range(0,3)]
+    j_medians = [round(job_vals[i][1],2) for i in range(0,3)]
+    # plot_grouped_bar(labels,means,medians,0)
 
     #for tasks
-    means = [round(task_vals[i][0],2) for i in range(0,3)]
-    medians = [round(task_vals[i][1],2) for i in range(0,3)]
-    plot_grouped_bar(labels,means,medians,1)
+    t_means = [round(task_vals[i][0],2) for i in range(0,3)]
+    t_medians = [round(task_vals[i][1],2) for i in range(0,3)]
+    plot_grouped_bar(labels,j_means,j_medians,t_means,t_medians)
 
 
 # In[18]:
@@ -338,3 +343,11 @@ for worker_log in worker_logs:
 # In[21]:
 
 groupby_mean_median_plot()
+
+# labels = ['RR','RANDOM','LL']
+
+# j_means = [5.766,5.951,5.488]
+# j_medians = [6.098,6.126,6.023]
+# t_means = [2.419,2.483,2.374]
+# t_medians = [3.002,2.050,2.002]
+# plot_grouped_bar(labels,j_means,j_medians,t_means,t_medians)
