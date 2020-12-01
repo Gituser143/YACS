@@ -228,6 +228,7 @@ def plot_bar(lines, task_arrival_pattern, task_ending_pattern, base, worker_id):
     file_name = "bar" + algos[algo_idx] + "worker" + worker_id + ".png"
     plt.savefig(file_name)
 
+# In[17]:
 
 def plot_grouped_bar(labels,means,medians,flag) : 
     #flag = 0 for job, 1 for task
@@ -271,7 +272,6 @@ def groupby_mean_median_plot() :
         f.close()
 
     job_vals = [compute_stats(s_lines,job_arrival_pattern,job_ending_pattern) for s_lines in mul_lines]
-    # print(job_vals)
 
     mul_lines = []
     for log_file in log_files : 
@@ -286,7 +286,6 @@ def groupby_mean_median_plot() :
         mul_lines.append(lines)
     
     task_vals = [compute_stats(s_lines, task_arrival_pattern, task_ending_pattern) for s_lines in mul_lines]
-    # print(task_vals)
 
     #for jobs
     labels = ['RR','RANDOM','LL']
@@ -300,40 +299,41 @@ def groupby_mean_median_plot() :
     plot_grouped_bar(labels,means,medians,1)
 
 
-# # In[17]:
+# In[18]:
 
 
-# for worker_log in worker_logs:
-#     with open(worker_log, "r") as f:
-#         lines = f.readlines()
-#     worker_id = worker_log.split("/")[-1]
-#     worker_id = worker_id.split("_")[-1]
-#     worker_id = worker_id.split(".")[0]
-#     plot_scatter(lines, task_arrival_pattern, task_ending_pattern, base, worker_id)
+for worker_log in worker_logs:
+    with open(worker_log, "r") as f:
+        lines = f.readlines()
+    worker_id = worker_log.split("/")[-1]
+    worker_id = worker_id.split("_")[-1]
+    worker_id = worker_id.split(".")[0]
+    plot_scatter(lines, task_arrival_pattern, task_ending_pattern, base, worker_id)
 
 
-# # In[18]:
+# In[19]:
 
 
-# for worker_log in worker_logs:
-#     with open(worker_log, "r") as f:
-#         lines = f.readlines()
-#     worker_id = worker_log.split("/")[-1]
-#     worker_id = worker_id.split("_")[-1]
-#     worker_id = worker_id.split(".")[0]
-#     plot_line(lines, task_arrival_pattern, task_ending_pattern, base, worker_id)
+for worker_log in worker_logs:
+    with open(worker_log, "r") as f:
+        lines = f.readlines()
+    worker_id = worker_log.split("/")[-1]
+    worker_id = worker_id.split("_")[-1]
+    worker_id = worker_id.split(".")[0]
+    plot_line(lines, task_arrival_pattern, task_ending_pattern, base, worker_id)
 
 
-# # In[19]:
+# In[20]:
 
 
-# for worker_log in worker_logs:
-#     with open(worker_log, "r") as f:
-#         lines = f.readlines()
-#     worker_id = worker_log.split("/")[-1]
-#     worker_id = worker_id.split("_")[-1]
-#     worker_id = worker_id.split(".")[0]
-#     plot_bar(lines, task_arrival_pattern, task_ending_pattern, base, worker_id)
+for worker_log in worker_logs:
+    with open(worker_log, "r") as f:
+        lines = f.readlines()
+    worker_id = worker_log.split("/")[-1]
+    worker_id = worker_id.split("_")[-1]
+    worker_id = worker_id.split(".")[0]
+    plot_bar(lines, task_arrival_pattern, task_ending_pattern, base, worker_id)
+
+# In[21]:
 
 groupby_mean_median_plot()
-# In[ ]:
