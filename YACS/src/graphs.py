@@ -236,7 +236,8 @@ def plot_grouped_bar(labels,means,medians,flag) :
     name = names[flag] 
     x = np.arange(len(labels))
     width = 0.35
-    fig,ax = plt.subplots()
+    fig,ax = plt.subplots(figsize = (15,10))
+    
     rects1 = ax.bar(x - width/2, means, width, label='mean')
     rects2 = ax.bar(x + width/2, medians, width, label='median')
 
