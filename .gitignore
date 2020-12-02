@@ -9,3 +9,4 @@ adjlist
 *.ipynb
 logs
 graphs
+*.pyc
