@@ -424,7 +424,7 @@ def worker_listener(n):
 
         else:
             stats_mutex.acquire()
-
+            free_slots = 0
             # Update free slots for worker
             for free_slots in loads:
                 if worker_id in loads[free_slots]:
