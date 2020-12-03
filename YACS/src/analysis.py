@@ -145,7 +145,7 @@ base_line = f.readline()
 f.close()
 
 base_match = re.match(job_arrival_pattern, base_line)
-base=''
+base = ''
 if base_match:
     base, _ = base_match.groups()
 
